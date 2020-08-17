@@ -68,21 +68,21 @@
 			opacity: 0.5;
 		}
 
-		.dzielnica_cechy {
+		.district_attr {
 			width: 30%;
 			padding-left: 1em;
 			vertical-align: center;
 			border-right: 0;
 		}
-		.dzielnica_cechy td, .dzielnica_cechy th {
+		.district_attr td, .district_attr th {
 			padding: 7px;
 			border-bottom: 1px solid #ddd
 		}
 
-		#dzielnica_opisy table {
+		#district_desc table {
 			table-layout: fixed;
 		}
-		#dzielnica_opisy td {
+		#district_desc td {
 			width: 33%;
 			vertical-align: top;
 			text-align: justify;
@@ -90,7 +90,7 @@
 			padding-right: 12px;
 		}
 
-		#dzielnica_opisy th{
+		#district_desc th{
 			text-align: center;
 			padding-bottom: 5px;
 		}
@@ -103,7 +103,7 @@
 			margin-right: auto;
 		}
 
-		#dzielnice {
+		#districts_list {
 			font-size: 0.85em;
 			vertical-align: center;
 			text-align: center;
@@ -115,7 +115,7 @@
 			display: none;
 		}
 
-		.frakcje_header {
+		.faction_header {
 			font-size: 1.5em;
 			font-weight: bold;
 		}
@@ -176,7 +176,7 @@
 				</defs>
 			</svg>
 			<!-- Tutaj wypisuję dzielnice pod mapą -->
-			<div id="dzielnice">
+			<div id="districts_list">
 				<small>Biała Korona</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z"/></svg>
 				<small>Bigowy Wądół</small>
@@ -207,7 +207,7 @@
 		<!-- Kolumna z informacjami o frakcjach -->
 		<div class="col">
 			<table id="frakcje" class="table table-sm">
-				<tr class="frakcje_header">
+				<tr class="faction_header">
 					<td>PÓŁŚWIATEK</td>
 					<td>Krąg</td>
 					<td>Kontrola</td>
@@ -233,7 +233,7 @@
 				<tr><td class="faction_name">Więzienie Żelazny Hak</td><td class="faction_name">IV</td><td class="faction_name">M</td><td class="faction_name"></td><td class="faction_name"></td><td class="faction_name"></td></tr>
 
 
-					<tr class="frakcje_header">
+					<tr class="faction_header">
 						<td>INSTYTUCJE</td>
 						<td>Krąg</td>
 						<td>Kontrola</td>
@@ -267,15 +267,14 @@
              -->
 
 		</div> <!-- Koniec kolumny z frakcjami-->
-	</div> <!-- Koniec row-->
+    </div>
 
-
+    <!-- Koniec kolumny z mapą-->
 
 
 	<!-- ---------- Modal dzielnice ---------- -->
-	<!-- This should be generated dynamically on Flask server using jinja template and made hidden -->
+    <!-- This modal is filled dynamically through JS. Can add downloading JSON data by AJAX, so everything is synced and updated for every client. -->
 	<!-- IDs of each content should be similar to SVG path IDs eg. Pierwomurze_modal or Wronia-Stopa_modal -->
-	<!-- Those information should be filled with information + images and editable notes at the bottom (toggle on editability) -->
 	<div class="modal fade" id="district_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"		aria-hidden="true">
 		<div class="modal-dialog modal-xl">
 			<div class="modal-content">
@@ -289,7 +288,7 @@
 				<!-- Modal dzielnica -->
 				<div class="modal-body">
 					<!-- BODY -->
-					<p id="dzielnica_obraz">Jezeli to widzisz, to coś poszło nie tak.</p>
+					<p id="district_img">Jezeli to widzisz, to coś poszło nie tak.</p>
 					<hr>
 					<table>
 						<tr>
@@ -298,7 +297,7 @@
 								<p id="dzielnica_opis">
 									Nie powinieneś tego widzieć.</p>
 							</td>
-							<td class="dzielnica_cechy">
+							<td class="district_attr">
 								<!-- Statystki/informacje o różnych poziomach -->
 								<table>
 									<th colspan="2" style="text-align:center">Cechy</th>
@@ -325,7 +324,7 @@
 
 					<br>
 
-					<table id="dzielnica_opisy">
+					<table id="district_desc">
 						<tr>
 							<th><strong>Sceneria</strong></th>
 							<th><strong>Ulice</strong></th>
@@ -366,10 +365,8 @@
 				</button>
 			</div>
 
-			<!-- Modal frakcja -->
 			<div class="modal-body">
 				<!-- BODY -->
-				<!-- <p id="dzielnica_obraz">Jezeli to widzisz, to coś poszło nie tak.</p> -->
 				<p id="faction_desc"></p>
 				<table id="faction_info">
 				</table>
@@ -421,7 +418,7 @@
 				//Tytuł
 				$('#district_title').html(district_name);
 				//Obraz
-				$('#dzielnica_obraz').html('<img class= "district_img" src="./district_imgs/' + district_name + '.jpg" />');
+				$('#district_img').html('<img class= "district_img" src="./district_imgs/' + district_name + '.jpg" />');
 				//Opis
 				$('#dzielnica_opis').html('<em>' + districts_data[district_name]['Opis'] + '</em>');
 				//Cechy
@@ -464,7 +461,7 @@
 			});
 			
 			//Podświetlanie dzielnic na mapie przy najeżdżaniu na nazwy pod mapą.
-			$('#dzielnice small').hover(function () {
+			$('#districts_list small').hover(function () {
 				$('#' + $(this).text().replace(' ', '-')).css('opacity', '0.5')
 				$(this).css('text-decoration', 'underline')
 			}, function() {
@@ -473,7 +470,7 @@
 			});
 
 			//Odpalanie modala przy kliknięciu na nazwę dzielnicy pod mapą.
-			$('#dzielnice small').click(function () {
+			$('#districts_list small').click(function () {
 				$('#' + $(this).text().replace(' ', '-')).trigger('click')
 			});
 
