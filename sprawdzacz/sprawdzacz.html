@@ -1,0 +1,45 @@
+<html>
+<title>Sprawdzacz</title>
+
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+	<h1 id="date">Dane z dnia </h1>
+	<table>
+		<div id="content">
+		</div>
+	</table>
+</body>
+
+<script>
+	$(document).ready(function () {
+		$.get("https://w43.sfgame.net/req.php?req=0-0tj74j71185Hw1m62ubgJq2WZrleqd11eVcOhgU3DzaEOXqGLGDq63ao04CbIPRzhL1rq99IAO9ineYK2wY_5j6SyW5VrYH-svJQ==&rnd=0.08269227&c=278", function (data) {
+			var nicks = data.split("&othergroupmember.s:")[1]
+			nicks = nicks.split("&othergrouprank:")[0]
+			nicks = nicks.split(",")
+			var levels = data.split("/")
+			levels = levels.slice(64, 64 + nicks.length)
+			levels = butcher(levels)
+			for (i in nicks) {
+				$("#content").append("<tr><td>" + nicks[i] + "</td><td>" + levels[i] + "</td></tr>")
+			}
+			var today = new Date();
+			$("#date").append(+today.getDate()+'-'+(today.getMonth()+1)+'-'+today.getFullYear())
+		});
+
+		function butcher(levels) {
+			for (i in levels) {
+				if (levels[i].length = 4) {
+					levels[i] = parseInt(levels[i].slice(1))
+				} else {
+					levels[i] = parseInt(levels[i])
+				}
+			}
+			return levels
+		};
+	})
+</script>
+
+</html>
