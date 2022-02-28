@@ -4,7 +4,9 @@
 	<meta charset="utf-8" />
 	<!-- jQuery -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
+	<!-- jQuery UI -->
+	<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"
+		integrity="sha256-eTyxS0rkjpLEo16uXTS0uVCS4815lc40K2iVpWDvdSY=" crossorigin="anonymous"></script>
 	<!-- Bootstrap -->
 	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
 		integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
@@ -22,10 +24,23 @@
 		var districts_data = { "Dzielnica": { "Opis": "Opis", "Sceneria": "Sceneria", "Ulice": "Ulice", "Zabudowa": "Zabudowa", "Zamożność": "Zamożność", "Prawo i Porządek": "Prawo i porządek", "Przestępczość": "Przestępczość", "Praktyki Okultystyczne": "Praktyki okultystyczne", "Zasady Specjalne": "Zasady specjalne" }, "Biała Korona": { "Opis": "Dzielnicę zbudowano na imponującym wzgórzu znajdującym się na wyspie położonej po drugiej stronie kanału Północny Hak. Usytuowana na wysokości twierdza Gubernatora czuwa nad całym Zmierzchomurzem. Wokół niej wyrosły ociekające bogactwem posiadłości najpotężniejszych przedstawicieli arystokracji oraz luksusowo urządzone budynki kampusu Akademii Doskvol. Biała Korona to zamknięty świat bogaczy i elit. Większość mieszkańców miasta nigdy nie przekroczy mostu prowadzącego do tego pełnego blichtru i władzy miejsca.", "Sceneria": "Dosiadający opancerzonych wierzchowców imperialni żołnierze defilują na przedpolu twierdzy, wysoko unosząc lśniące lance. Kadeci ćwiczą na pokładzie remontowanego w doku okrętu poławiaczy lewiatanów. Wystawne karety i powozy elektroplazmowe bogaczy suną po ulicach, rozwożąc uprzywilejowanych pasażerów po różnych luksusowych miejscach.", "Ulice": "Szerokie, wykładane wypolerowanym brukiem. Oświetlone jasno, niemal jak za dnia, przez multum ciepłych, elektrycznych świateł. Bulwar Białej Korony, aleja Herbowa.", "Zabudowa": "Wspaniałe, eleganckie fasady, tarasy widokowe, balkony, budynki z jasnego marmuru wykończonego platynowymi i złotymi detalami, połączone z innymi zabudowaniami za pomocą nadziemnych chodników.", "Zamożność": "4", "Prawo i Porządek": "4", "Przestępczość": "0", "Praktyki Okultystyczne": "2", "Zasady Specjalne": "Większość rzutów na wejście otrzymuje karę −2k z powodu częstych patroli Błękitnych Płaszczy. Na potrzeby określania przypału traktuj działania wymierzone w arystokrację Białej Korony jako przeprowadzane na „wrogim terenie”." }, "Bigowy Wądół": { "Opis": "Mieszkają tu pracujących w gospodarstwach radiacyjnych (oświetlanych energią radiacyjną) robotnicy i nadzorcy z Ministerstwa Ochrony. To pokryta pyłem wiejska dzielnica o prostych, jedno- lub dwukondygnacyjnych drewnianych budynkach i szerokich, gruntowych drogach zdolnych pomieścić ogromne wozy towarowe. Rolnicy z Bigowego Wądołu należą do zżytych, rodzinnych klanów, dumnych ze swego istotnego wkładu w dobrobyt miasta i trzymających się z daleka od „miastowych” zza rzeki. Osoby z zewnątrz są tu mile widziane, jeśli przybyły ubić uczciwy interes. W innym przypadku muszą się liczyć z chłodnym i podejrzliwym przyjęciem.", "Sceneria": "Rolnicy powolnie zmierzają do pracy lub wracają do domu. Rzemieślnicy wytwarzają proste przedmioty. Kupcy sprzedają swoje towary. Ciężko obładowane wozy dostarczają żywność do miasta. Czujni strażnicy obserwują uprawy ze szczytu wież wartowniczych.", "Ulice": "Równe drogi gruntowe, rowy melioracyjne. Aleja Czarnego Wzgórza, ulica Młynów, ulica Tragarzy.", "Zabudowa": "Niskie i szerokie drewniane budynki, stodoły, zagrody, kamienne młyny. Posiadłości nadzorców wybudowane na szczytach wzgórz. Przeludnione mieszkania, wieże i targowiska ciągnące się wzdłuż całego Bigowego Mostu.", "Zamożność": "1", "Prawo i Porządek": "3", "Przestępczość": "0", "Praktyki Okultystyczne": "0", "Zasady Specjalne": "Tutejsze targowisko jest jednym z najlepszych, lecz przestępcze gęby przyciągają zbyt wiele spojrzeń. Możesz otrzymać +1k do aktywności nabywania aktywów w tym miejscu, lecz zarazem dostaniesz również  +2 przypału." }, "Burobagnie": { "Opis": "Burobagnie jest gettem miejskich nędzarzy. Mieści się tu więzienie Żelazny Hak i należący do niego obóz pracy. Początkowo było to osiedle zamieszkiwane przez rodziny więźniów, lecz wraz z upływem czasu skrajna bieda i zaniedbanie zmieniły je w całkowitą ruinę. Życie tutaj wpada w błędne koło: przestępstwo popełnione w desperacji, areszt, odsiadka i powrót do Burobagnia. W ten sposób Żelazny Hak ma zapewniony niekończący się dostęp do taniej siły roboczej.", "Sceneria": "Pokryci błotem robotnicy wracają z Bajora. Rodziny nędzarzy szukają odpadków wzdłuż drogi prowadzącej do gospodarstw rolnych Bigowego Wądołu. Znudzeni strażnicy z Żelaznego Haka, z karabinami przewieszonymi przez plecy, przyglądają się, jak nadzorca obozu pracy batoży więźnia.", "Ulice": "Zatłoczone i wielopoziomowe. Niektóre są brukowane, choć większość to gruntówki, rozmokłe do postaci gęstego, czarnego błocka. Tutejsze ulice nie mają nazw.", "Zabudowa": "Rozpadające się drewniane szeregówki, pośród nich wiele domów zniszczonych przez ogień lub zwalonych ze starości. Kamienne silosy, poszczękująca maszyneria parowa i metalowe wiaty dla pogłębiarek.", "Zamożność": "0", "Prawo i Porządek": "0", "Przestępczość": "2", "Praktyki Okultystyczne": "1", "Zasady Specjalne": "" }, "Charłakowa Jama": { "Opis": "Tę gęsto zaludnioną dzielnicę zamieszkuje większość siły roboczej miasta: służący, dokerzy, marynarze, robotnicy doglądający zagród i hodowli węgorzy, dorożkarze i tak dalej. To podła, głośna i zatłoczona okolica, duszna i wilgotna od wyziewów z kuchennych pieców i syczących rur parowych. Mimo to wśród mieszkańców panuje rodzinna atmosfera, jakiej nie znajdzie się nigdzie indziej. W Charłakowej Jamie powstała prawdziwa społeczność. I choć stało się to za sprawą przypadku i okoliczności, ludzi połączyły więzi wzajemnego wsparcia i troski. Jest to zupełne przeciwieństwo sytuacji panującej w innych dzielnicach, gdzie zimna bezwzględność jest na porządku dziennym.", "Sceneria": "Wracający z pracy robotnicy pozdrawiają okrzykami rodzinę i przyjaciół. Grupki osób wspólnie gotują i spożywają posiłki przy ogólnodostępnych piecach kuchennych. Biegające dookoła dzieciaki bawią się w zerkanego oraz w łapaj ducha.", "Ulice": "Strome zbocza poprzecinane niewykończonymi, kamiennymi schodami, kręte uliczki, śmieci i uliczny bruk. Ulica Mostowa, ulica Przy Kanale, ulica Podgórze.", "Zabudowa": "Jedno- i dwuizbowe domy nadbudowane jeden na drugim, czynszówki, zdezelowane mieszkania, podniszczone gospody i puby.", "Zamożność": "0", "Prawo i Porządek": "2", "Przestępczość": "1", "Praktyki Okultystyczne": "0", "Zasady Specjalne": "Na potrzeby określania przypału traktuj działania wymierzone w mieszkańców Charłakowej Jamy jako przeprowadzane na „wrogim terenie." }, "Doki": { "Opis": "Doki Doskvol są stare. Ich historia sięga czasów przed kataklizmem, kiedy okolica była kolonią starego królestwa Skow. Obecnie część imperialnego handlu korzysta z kolei elektrycznej, lecz doki nadal tętnią życiem, pełne statków towarowych, łodzi rybackich oraz wspaniałych okrętów poławiaczy lewiatanów dostarczających surowiec napędzający całe miasto.", "Sceneria": "Stojące w porcie małe i średnie statki parowe wyglądają niczym karły przy cumującym w pewnym oddaleniu tytanicznych rozmiarów okręcie poławiaczy lewiatanów. Tłum zajętych pracą marynarzy i dokerów podśpiewuje szanty. Ciężkie ładunki przewożone są na turkoczących wozach. Krzyki i odgłosy tłuczonego szkła dobiegają z gospody, w której wybuchła bójka.", "Ulice": " Podwyższone ulice ciągnące się nad dokami, otoczone przez dźwigi i żurawie. Aleja Północnego Haka, ulica Wozaków, ulica Smugi, ulica Saltforda, aleja Atramentowa.", "Zabudowa": "Ogromne magazyny, przysadziste gospody, burdele i salony tatuażu. Przepełnione krótkoterminowe noclegownie dla marynarzy.", "Zamożność": "2", "Prawo i Porządek": "2", "Przestępczość": "2", "Praktyki Okultystyczne": "2", "Zasady Specjalne": "Na potrzeby określania przypału traktuj działania wymierzone w cumujące w porcie statki jako przeprowadzane na „wrogim terenie”." }, "Jasnomurze": { "Opis": "Jasnomurze zamieszkuje wielu z najbogatszych i najbardziej wpływowych mieszczan. Ulice dzielnicy są szerokie, brukowane i oświetlone lampami elektrycznymi. Kanały są tak czyste, że ich perfumowana woda aż lśni. Domy elit są zbudowane z bloków białego marmuru wyśmienitej jakości i rzadkiego drewna oraz ozdobione za pomocą misternych wyrobów kowalstwa artystycznego. Zadbane parki rosną dzięki energii radiacyjnej. To również dzielnica pełnych przepychu restauracji i kafejek, jubilerów, krawców i innych luksusowych sklepów. Uliczny handel jest tutaj zabroniony, co przekłada się na brak tłumów i spokojną atmosferę, z rzadka przerywaną przez turkot powozów lub miarowy krok patrolu Błękitnych Płaszczy.", "Sceneria": "Elitarne patrole Błękitnych Płaszczy wyposażone w świetne pancerze i lśniące karabiny z długimi bagnetami. Bogaci mieszczanie przechadzają się w towarzystwie służby wśród wypielęgnowanych ogrodów. Turkot zaprzęgniętych w konie karet oraz sporadycznie przejeżdżających alejami powozów elektroplazmowych.", "Ulice": "Szerokie, czyste i dobrze oświetlone. Aleja Srebrnych Marchii, aleja Złotych Herbów, ulica Rubinowa, ulica Szafirowa.", "Zabudowa": "Kamienne posiadłości z barierami piorunów, rezydencje, pełne przepychu domy, wytworne teatry i restauracje, luksusowe sklepy.", "Zamożność": "4", "Prawo i Porządek": "4", "Przestępczość": "0", "Praktyki Okultystyczne": "2", "Zasady Specjalne": "Większość rzutów na wejście otrzymuje tutaj −1k z powodu częstych i czujnych patroli Płaszczy. Na potrzeby określania przypału traktuj działania wymierzone w szlachtę Jasnomurza jako przeprowadzane na „wrogim terenie”." }, "Jedwabny Brzeg": { "Opis": "Okolica poprzecinana jest dziesiątkami wąskich kanałów. Najłatwiej zatem przemieszczać się tutaj za pomocą gondoli, jak zresztą czyni większość odwiedzających tę „dzielnicę czerwonych latarni”. Burdele, gniazda rozpusty, stragany z jedzeniem i egzotyczne sklepy gnieżdżą się nad brzegami kanałów, gotowe zaspokoić potrzeby klientów bez zadawania zbędnych pytań. Jedwabny Brzeg jest miejscem otwartego dogadzania namiętnościom i skrytego podsycania żądz, gdzie można zaznać wszelkich wyobrażalnych rozkoszy – oraz takich, które wykraczają poza granice fantazji.", "Sceneria": "Gondole przemykają po pajęczej sieci kanałów, przewożąc klientelę pomiędzy gniazdami rozpusty. W kafejkach Mglistego Szczytu artyści i filozofowie sprzeczają się o tezy epistemologiczne przy iruwiańskiej herbacie.", "Ulice": "Nieliczne ulice biegną mostami przerzuconymi nad wąskimi kanałami. Kolorowe światła i wzorzyste jedwabie zwisają z dachów, reklamując różnorodne rozkosze za pomocą skomplikowanego kodu znanego wtajemniczonym. Kanały: Zielony, Pływowy, Kurantów, Okrężny, Słodyczy.", "Zabudowa": "Wysokie, wąskie domy szeregowe zbudowane z drewna i kamienia. Niskie szopy i stargany ustawione wzdłuż brzegów kanałów. Stłoczone stare, kamienne domy i przerobiona na biura zabudowa Mglistego Szczytu.", "Zamożność": "2", "Prawo i Porządek": "2", "Przestępczość": "3", "Praktyki Okultystyczne": "1", "Zasady Specjalne": "Jeśli zdarzy ci się przedawkować słabość podczas pobytu w Jedwabnym Brzegu, zaczniesz jej bardziej pożądać. Następnym razem, gdy będziesz ją zaspokajał w tym miejscu, otrzymasz +1k do rzutu." }, "Nocny Targ": { "Opis": "Nocny Targ jest dzielnicą zdominowaną przez handel. Z powodu niewielkiej odległości od Dworca Kolejowego Gaddoc trafia tu większość towarów przeznaczonych na sprzedaż – także tych rzadkich i egzotycznych – transportowanych koleją z terytorium całego Imperium. \nMieszkańcy dzielnicy tworzą nową klasę „elit” – bogatych ludzi, którzy nie mają co prawda arystokratycznego pochodzenia, lecz mimo to są właścicielami ziemskimi, cieszą się wysokim statusem społecznym i skupiają w swoich rękach władzę mimo braku tytułów szlacheckich. Krajobraz dzielnicy został zdominowany przez nowe budownictwo. To tutaj zaczęły powstawać pierwsze, pełne przepychu prywatne rezydencje miejskie wyposażone we wszelakie nowoczesne udogodnienia, na które mogą sobie pozwolić wyłącznie przedstawiciele elit.", "Sceneria": "Elektryczne światła o szalonej feerii barw reklamują stragany. Kilku akolitów pochyla głowy w cichej modlitwie przed posągiem Królowej Nocy – zapomnianej bogini czczonej na terenie dzielnicy. Skryci za maskami przedstawiciele miejskiej elity znikają w piwnicach, aby oddawać się rozkoszom w prywatnych klubach.", "Ulice": "Wielopoziomowe drewniane platformy i promenady. Estetyczne parki skamieniałych drzew sprowadzonych z martwych ziem. Wytworne podziemne aleje. Ulica Pieśni, ulica Dzwonu.", "Zabudowa": "Drewniane stragany. Podziemne sklepy i kluby. Nowo wybudowane prywatne miejskie posiadłości elit Nocnego Targu.", "Zamożność": "3", "Prawo i Porządek": "3", "Przestępczość": "2", "Praktyki Okultystyczne": "1", "Zasady Specjalne": "Nocny Targ to najlepsze miejsce, aby obracać nielegalnymi lub tajemnymi towarami, lecz jego mroczne zaułki pełne są dziwnych potworności. Możesz otrzymać +1k do aktywności pozyskania aktywów w tym miejscu, lecz będzie cię to kosztowało 2 stresu." }, "Pierwomurze": { "Opis": "To właśnie na terenie Pierwomurza, jeszcze przed kataklizmem, powstały pierwsze ważne miejskie budowle. Nadal stoi tam, częściowo zrujnowany, stary mur, na którego szczycie zbudowano pierwszą w Imperium barierę piorunów. Dzielnica obecnie mieści rządowe budynki użyteczności publicznej, takie jak sądy, urzędy licencyjne i podatkowe, banki oraz archiwa. Mieszkają tu miejscy urzędnicy i studenci Uniwersytetu Pierwomurza, a także magnaci imperialnego przemysłu, którzy lubią cieszyć oczy widokiem swoich fortun.", "Sceneria": "Urzędnicy miejscy i pracownicy rządowi biegają tam i z powrotem z torbami pełnymi urzędowych papierzysk. Bogaci bankierzy przemierzają ulice w wielkich karetach, otoczeni przez prywatnych ochroniarzy odzianych w podzwaniające zbroje. Studenci przesiadujący w narożnych kafejkach dyskutują o iruwiańskiej polityce, rodach plemiennych Wysp Sztyletowych i innych osobliwych zagadnieniach.", "Ulice": "Szerokie, czyste, dobrze oświetlone. Ulica Urzędników, aleja Jayana, aleja Imperialna.", "Zabudowa": "Okazałe kamienne budynki otoczone masywnymi kolumnami i ozdobione klasycznymi motywami rzeźbiarskimi. ", "Zamożność": "4", "Prawo i Porządek": "4", "Przestępczość": "0", "Praktyki Okultystyczne": "0", "Zasady Specjalne": "Tutejsze archiwa bywają szczególnie interesujące dla przestępców. Zaakceptuj Czarci Targ, aby otrzymać +1k do zbierania informacji na terenie dzielnicy za 1 przypału (Błękitni są tutaj bardzo wyczuleni na łotrów)." }, "Sześć Wież": { "Opis": "Ta niegdyś prestiżowa dzielnica podupadła przez stulecia i obecnie jest zaledwie bladym cieniem swojej dawnej chwały. Wieże, od których wywodzi się jej nazwa, były kiedyś okazałymi rezydencjami pierwszych arystokratycznych rodów Zmierzchomurza. Wszystkie oprócz dwóch (posiadłości Bowmore’ów i Rowanów) zostały sprzedane i przekształcone w tanie mieszkania lub porzucone, gdy popadły w ruinę. Na każdym kroku Sześć Wież zieje pustką i wygląda na nawiedzone miejsce. W okolicy sporo jest starych, nieoświetlonych budynków. Szerokie, brukowane ulice pełne są dziur i wybojów, a na zarośniętych posesjach płoną ogniska rozpalane przez dzikich lokatorów.", "Sceneria": "Zimny wiatr przegania śmieci po opustoszałych ulicach, oświetlonych przez kilka wciąż działających latarni i ogniska dzikich lokatorów. Drzwi i okiennice opuszczonych budynków zawodzą, skrzypią i uderzają o mury niczym chór potępionych dusz. Mieszkańcy zmierzają gdzieś szybkim krokiem ze spuszczonymi głowami, zaciskając palce na przyciśniętych do piersi amuletach odpędzających duchy.", "Ulice": "Szerokie, brukowane aleje, popękane i zniszczone, zaniedbane i zarośnięte, tonące w mroku z braku oświetlenia. Aleja Rodu Comberów, aleja Rodu Bowmore’ów, aleja Rodu Rowanów, aleja Rodu Coleburnów.", "Zabudowa": "Imponujące majątki ziemskie obrócone w ruinę. Wielkie posiadłości podzielone na tanie, ciasne mieszkania.", "Zamożność": "2", "Prawo i Porządek": "1", "Przestępczość": "2", "Praktyki Okultystyczne": "3", "Zasady Specjalne": "Obecność wielu pustych budynków i opuszczonych posiadłości sprawia, że dzielnica jest doskonałym miejscem na łotrowskie kryjówki." }, "Węglowa Grań": { "Opis": "Dzielnicę zamieszkuje większość miejskich mechaników i robotników przemysłowych. Znajduje się tu również gros fabryk Zmierzchomurza. Pracujące zakłady wyrzucają z siebie gęste chmury czarnego dymu, snopy iskier i stosy rozżarzonych węgli. Jest tu tłoczno i głośno, w powietrzu unosi się sadza. Zbiegające się na Dworcu Gaddoc stare, nadziemne linie kolejowe, którymi kiedyś szły transporty węgla, teraz służą do przewozu ciężkiego sprzętu i surowców. Wiele z wiekowych torów i wagonów zostało przejętych przez dzikich lokatorów, którzy urządzili w nich prowizoryczne domy.", "Sceneria": "Sceneria: Pokryci sadzą, zmęczeni robotnicy powoli wracają z fabryk do domów, odchrząkując czarną plwocinę. Wagony przemysłowe rozładowywane za pomocą żurawia. Chuligani szwendają się po ulicach. Nadzorca fabryki batoży robotnika za jakieś przewinienie. Dzicy lokatorzy pichcą obiad w palenisku porzuconej lokomotywy.", "Ulice": "Wielopoziomowe, zawalone skrzynkami i górami śmieci. Aleja Rodu Dunvilów, aleja Węglowa, ulica Budowlańców, ulica Hutnicza.", "Zabudowa": "Wysokie i wąskie ceglane domy szeregowe z kopcącymi kominami, zakłady metalurgiczne i magazyny, porzucone wagony kolejowe przerobione na pomieszczenia mieszkalne.", "Zamożność": "1", "Prawo i Porządek": "1", "Przestępczość": "1", "Praktyki Okultystyczne": "0", "Zasady Specjalne": "Nie ma tu idealnych godzin dla skoków, ponieważ fabryki Węglowej Grani pracują przez całą dobę. Brygadziści chętnie jednak przyjmą kilka dukatów, aby „zrobić sobie przerwę” lub spojrzeć w inną stronę." }, "Wronia Stopa": { "Opis": "Wszystkie drogi prowadzą do Wroniej Stopy. Nic zatem dziwnego, że dzielnica łączy w sobie wiele cech sąsiadujących z nią części miasta: zakazane używki Jedwabnego Brzegu, pracę i handel Doków, ubóstwo Charłakowej Jamy oraz klasycystyczną architekturę Pierwomurza. Mozaikę Wroniej Stopy jednocześnie utrzymuje w całości i rozrywa na kawałki mnogość konkurujących ze sobą ulicznych gangów i oddziałów Błękitnych Płaszczy. Wszyscy bowiem roszczą sobie prawo do każdej alejki i każdego rogu ulicy, tocząc niekończącą się wojnę o teren.", "Sceneria": "Dokerzy w drodze do pracy lub wracający ze zmiany do domu. Prostytutki stoją na rogach ulic, nagabując klientów. Patrol Błękitnych Płaszczy wymusza łapówkę na sklepikarzu. Konkurencyjne gangi wygrażają sobie nawzajem z dachów kamienic. Piękna kareta wiezie bogacza poszukującego nielegalnych towarów.", "Ulice": "Wielopoziomowe, zatłoczone, zamglone i mroczne. Aleja Popielna, ulica Żarowa, ulica Żytnia, ulica Świec, alejka Hullivera.", "Zabudowa": "Noclegownie, karczmy, stare posiadłości podzielone na mieszkania, zwykłe kamienne domy. Kuźnie, gospody, burdele i rzeźnie.", "Zamożność": "2", "Prawo i Porządek": "1", "Przestępczość": "4", "Praktyki Okultystyczne": "2", "Zasady Specjalne": "Z powodu popełnianych przez lata morderstw Wronia Stopa stała się najbardziej nawiedzoną dzielnicą miasta. Rozgniewane duchy spragnione są krwi. Możesz zaakceptować Czarci Targ, aby otrzymać +1k dla akcji związanych z przemocą, lecz wówczas zaatakuje także jakiś duch." } };
 	</script>
 
+
+
 	<!-- Custom CSS -->
 	<style>
 		body {
 			padding: 1em;
+			background-color: rgb(239, 240, 242);
+			transition: background-color 0.7s;
+		}
+
+		.dark {
+			background-color: rgb(73, 73, 73);
+		}
+
+		th {
+			text-align: center;
+			border-bottom: solid #e5e5e569 1px;
 		}
 
 		/* CSS BARBARIAN STYLE */
@@ -115,6 +130,7 @@
 
 		#factions_col {
 			display: none;
+			overflow: hidden;
 		}
 
 		#factions_table {
@@ -139,14 +155,25 @@
 			width: 15%;
 			font-weight: bold;
 		}
+
+		.center_class {
+			margin: auto;
+			overflow: hidden;
+		}
+
+		#doskvol_map {
+			border-style: solid;
+			border-color: white;
+		}
 	</style>
+
 </head>
 
 <body>
 	<!-- Kolumna z mapą -->
 
 	<div class="row">
-		<div class="col-md-auto">
+		<div class="col-md-auto center_class">
 			<svg id="doskvol_map" width="1226px" height="920px" viewBox="0 0 5996 4500" version="1.1"
 				xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
 				xmlns:serif="http://www.serif.com/">
@@ -189,72 +216,72 @@
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Bigowy Wądół</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Burobagnie</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Charłakowa Jama</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Doki</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Jasnomurze</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Jedwabny Brzeg</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Nocny Targ</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Pierwomurze</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Sześć Wież</small>
 				<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill" fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Węglowa Grań</small>
 				<svg id="show_factions" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-suit-diamond-fill"
 					fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 					<path
 						d="M2.45 7.4L7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2z" />
-					</svg>
+				</svg>
 				<small>Wronia Stopa</small>
 
 			</div>
-		</div>
 
+		</div>
 		<!-- Kolumna z informacjami o frakcjach -->
 		<div id="factions_col" class="col">
 
@@ -262,7 +289,8 @@
 			<div class="input-group input-group-sm mb-3">
 				<div class="input-group-prepend">
 				</div>
-				<input id="faction_search" type="text" class="form-control" placeholder="Szukaj..." aria-describedby="inputGroup-sizing-sm">
+				<input id="faction_search" type="text" class="form-control" placeholder="Szukaj..."
+					aria-describedby="inputGroup-sizing-sm">
 			</div>
 
 		</div> <!-- Koniec kolumny z frakcjami-->
@@ -291,15 +319,22 @@
 					<hr>
 					<table>
 						<tr>
+							<th>Opis</th>
+							<th>Cechy</th>
+						</tr>
+
+						<tr>
+
 							<td class="dzielnica">
 								<!-- Opis dzielnicy -->
-								<p id="dzielnica_opis">
-									Nie powinieneś tego widzieć.</p>
+								<span class="align-middle">
+									<p id="dzielnica_opis">Nie powinieneś tego widzieć.</p>
+								</span>
 							</td>
 							<td class="district_attr">
 								<!-- Statystki/informacje o różnych poziomach -->
 								<table>
-									<th colspan="2" style="text-align:center">Cechy</th>
+									<!-- <th colspan="2" style="text-align:center">Cechy</th> -->
 									<tr>
 										<td>Zamożność</td>
 										<td id="zamoznosc"></td>
@@ -351,7 +386,7 @@
 		</div>
 	</div>
 
-	<!-- ---------- Modal  frakcje ---------- -->
+	<!-- ---------- Modal  frakcje (info o pojedynczej) ---------- -->
 	<div class="modal fade" id="faction_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
 		aria-hidden="true">
 		<div class="modal-dialog modal-xl">
@@ -416,7 +451,7 @@
 				//Tytuł
 				$('#district_title').html(district_name);
 				//Obraz
-				$('#district_img').html('<img class= "district_img" src="./district_imgs/' + district_name + '.jpg" />');
+				$('#district_img').html('<img class= "district_img img-fluid" src="./district_imgs/' + district_name + '.jpg" />');
 				//Opis
 				$('#dzielnica_opis').html('<em>' + districts_data[district_name]['Opis'] + '</em>');
 				//Cechy
