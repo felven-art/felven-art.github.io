@@ -4,9 +4,14 @@
 </title>
 
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
 	<script>
 		// Main tables with things to be rolled.
+		// Tables for char gen.
 		var cecha = [
 			"Czarujący",
 			"Zimny",
@@ -281,32 +286,181 @@
 			"Seweros",
 			"Tycheros"
 		]
-		function generate() {
-			function getRandomElement(list) {
-				min = 0
-				max = list.length - 1
-				rand = Math.floor(Math.random() * (max - min + 1)) + min
-				console.log(rand + ": " + list[rand])
-				return list[rand]
-			}
-			function displayResults() {
-				document.getElementById("wyglad").innerHTML = getRandomElement(wyglad)
-				document.getElementById("cel").innerHTML = getRandomElement(cele)
-				document.getElementById("metodaDzialania").innerHTML = getRandomElement(metodyDzialania)
-				document.getElementById("zawod").innerHTML = getRandomElement(zawody)
-				document.getElementById("cecha").innerHTML = getRandomElement(cecha)
-				document.getElementById("zainteresowania").innerHTML = getRandomElement(zainteresowania)
-				document.getElementById("osobliwosci").innerHTML = getRandomElement(osobliwosci)
+		// Tables for action gen.
+		var klientCel = [
+			"Wykładowca lub uczony",
+			"Robotnik lub rzemieślnik",
+			"Posłaniec lub marynarz",
+			"Kupiec lub sklepikarz",
+			"Artysta lub pisarz",
+			"Lekarz lub alchemik",
+			"Handlarz lub dostawca narkotyków",
+			"Najemnik lub zbir",
+			"Paser lub hazardzista",
+			"Szpieg lub informator",
+			"Przemytnik lub złodziej",
+			"Szef gangu",
+			"Arystokrata lub urzędnik",
+			"Bankier lub kapitan",
+			"Rewolucjonista lub uchodźca",
+			"Duchowny lub kultysta",
+			"Posterunkowy lub Aspirant",
+			"Sędzia lub szef oddziału więziennego",
+			"Duch (rzuć ponownie)",
+			"Kolekcjoner okultysta",
+			"Wampir lub inny nieumarły",
+			"Demon (w przebraniu)",
+			"Opętany lub opustoszały",
+			"Szeptuch lub kultysta"
+		]
+		var robota = [
+			"Prześladowanie lub obserwacja",
+			"Sabotaż lub podpalenie",
+			"Kradzież lub podrzucenie dowodów",
+			"Otrucie lub wypadek",
+			"Kradzież z włamaniem lub napad",
+			"Podszycie się lub oszustwo",
+			"Zabójstwo",
+			"Zniknięcie lub okup",
+			"Zastraszenie lub wymuszenie",
+			"Zniszczenie lub oszpecenie",
+			"Rabunek lub ochrona przed nim",
+			"Rabunek lub użycie przemocy",
+			"Eskorta lub ochrona",
+			"Przemyt lub transport",
+			"Szantaż lub zdyskredytowanie kogoś",
+			"Kant lub szpiegostwo",
+			"Znalezienie lub ukrycie",
+			"Negocjacje lub groźby",
+			"Klątwa lub poświęcenie",
+			"Wygnanie lub przyzwanie",
+			"Wydobycie esencji",
+			"Umieszczenie lub usunięcie runów",
+			"Odprawienie lub przerwanie rytuału",
+			"Opustoszenie lub przywrócenie"
+		]
+		var zwrotAkcji = [
+			"Dana rzecz jest przykrywką dla aktywności heretyckiego kultu duchówi",
+			"Okultysta przewidział ten skok ostrzegł zaangażowane frakcje",
+			"Niespokojne duchy opętały niektóre / większość / wszystkie zaangażowane osoby",
+			"To miejsce jest nawiedzane przez niespokojne duchy",
+			"Skok pomaga demonowi w realizacji jego tajnych planów",
+			"Skok pomaga wampirowi w realizacji jego tajnych planów",
+			"Dana rzecz jest przykrywką dla działalności przestępczej",
+			"Tutaj działa niebezpieczny gang",
+			"Skok jest pułapką zastawioną przez waszych wrogów",
+			"Skok jest testem przed inną robotą",
+			"Skok pomaga potężnemu kupcowi w realizacji jego tajnych planów",
+			"Skok pomaga szefowi gangu w realizacji jego tajnych planów",
+			"Skok wymaga podróży pociągiem elektrycznym",
+			"Aby wykonać skok, trzeba odwiedzić martwe ziemie",
+			"Skok wymaga podróży morskiej",
+			"Cel skoku jest w ruchu (zmienia się miejsce, podróżuje w pojeździe itd.)",
+			"Skok pomaga rewolucjonistom w realizacji ich tajnych planów",
+			"Skok pomaga urzędnikom miejskim w realizacji ich tajnych planów"
+		]
+		var powiazanaOsoba = [
+			"(BG) Przyjaciel",
+			"(BG) Rywal",
+			"(BG) Dostawca słabości",
+			"(Szajka) Kontakt",
+			"(Miasto) Osobistość Doskvol",
+			"(Dziw) Duch, demon, bóstwo"
+		]
+		var powiazanaFrakcja = [
+			"Aspiranci",
+			"Błękitne Płaszcze",
+			"Brygada",
+			"Czerwone Szarfy",
+			"Dokerzy",
+			"Dorożkarze",
+			"Fundamentaliści",
+			"Gondolierzy",
+			"Horda",
+			"Imperialne Siły Zbrojne",
+			"Iskrownicy",
+			"Kałamarzyści",
+			"Konsulat Iruwii",
+			"Konsulat Seweros",
+			"Konsulat Skowlanu",
+			"Konsulat Wysp Sztyletowych",
+			"Kościół Cielesnej Ekstazy",
+			"Krąg Ognia",
+			"Lord Scurlock",
+			"Łupieżcy Martwych Ziem",
+			"Majchry Kolejowe",
+			"Marynarze",
+			"Ministerstwo Ochrony",
+			"Niewidoczni",
+			"Ogary Mgieł",
+			"Pancerny Ulf",
+			"Płacząca Pani",
+			"Pojednani",
+			"Poławiacze Lewiatanów",
+			"Rada Miejska",
+			"Robotnicy",
+			"Rój",
+			"Siekacze",
+			"Siostry Ściemne",
+			"Skowlańscy Uchodźcy",
+			"Służący",
+			"Srebrne Ćwieki",
+			"Strażnicy Dusz",
+			"Szare Płaszcze",
+			"Szlifierze",
+			"Szyfranci",
+			"Ścieżka Szeptów",
+			"Upiory",
+			"Więzienie Żelazny Hak",
+			"Wrony",
+			"Zaciemniacze",
+			"Zagubieni",
+			"Zapomniane Bóstwa"]
+		var dzielnica = [
+			"Biała Korona. <i>Rozległe posiadłości Gubernatora, Naczelnego Poławiacza, Głównego Strażnika oraz Akademii Doskvol.</i>",
+			"Bigowy Wądół. <i>Targowiska i siedziby rolników pracujących na okolicznych polach i stawach hodowlanych.</i>",
+			"Burobagnie. <i>Obóz pracy i getto nędzarzy.</i>",
+			"Charłakowa Jama. <i>Zatłoczona dzielnica pełna kamienic czynszowych i domów nadbudowanych jeden na drugim.</i>",
+			"Doki. <i>Obskurne gospody, salony tatuażu, podziemne kręgi i magazyny.</i>",
+			"Jasnomurze. <i>Ogromne posiadłości i luksusowe sklepy bogatych elit.</i>",
+			"Jedwabny Brzeg. <i>Dzielnica czerwonych latarni i komun artystycznych.</i>",
+			"Nocny Targ. <i>Centrum handlu egzotycznymi dobrami, importowanymi do miasta za pomocą kolei. Wielu sprzedawców obraca również nielegalnym towarem.</i>",
+			"Pierwomurze. <i>Siedziba miejskich urzędów, a także centrum handlu, pełne sklepów i artystów.</i>",
+			"Sześć Wież. <i>Niegdyś bogata dzielnica, obecnie podupadła i zrujnowana.</i>",
+			"Węglowa Grań. <i>Pozostałości pierwotnej osady górniczej położonej na szczycie wzgórza, obecnie siedziba robotników i zakładów przemysłowych.</i>",
+			"Wronia Stopa. <i>Rządzona przez gangi zatłoczona dzielnica, pełna wielopoziomowych ulic.</i>"
+		]
+		// Getting random element from array.
+		function getRandomElement(list) {
+			min = 0
+			max = list.length - 1
+			rand = Math.floor(Math.random() * (max - min + 1)) + min
+			console.log(rand + ": " + list[rand])
+			return list[rand]
+		}
 
-			}
-			displayResults()
+		function generateAction() {
+			document.getElementById("klient").innerHTML = getRandomElement(klientCel)
+			document.getElementById("celSkoku").innerHTML = getRandomElement(klientCel)
+			document.getElementById("robota").innerHTML = getRandomElement(robota)
+			document.getElementById("zwrotAkcji").innerHTML = getRandomElement(zwrotAkcji)
+			document.getElementById("powiazanaOsoba").innerHTML = getRandomElement(powiazanaOsoba)
+			document.getElementById("powiazanaFrakcja").innerHTML = getRandomElement(powiazanaFrakcja)
+			document.getElementById("dzielnica").innerHTML = getRandomElement(dzielnica)
+		}
 
+		function generateCharacter() {
+			document.getElementById("wyglad").innerHTML = getRandomElement(wyglad)
+			document.getElementById("celPostaci").innerHTML = getRandomElement(cele)
+			document.getElementById("metodaDzialania").innerHTML = getRandomElement(metodyDzialania)
+			document.getElementById("zawod").innerHTML = getRandomElement(zawody)
+			document.getElementById("cecha").innerHTML = getRandomElement(cecha)
+			document.getElementById("zainteresowania").innerHTML = getRandomElement(zainteresowania)
+			document.getElementById("osobliwosci").innerHTML = getRandomElement(osobliwosci)
 		}
 	</script>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet"> 
-	
+
+
 	<style>
 		body {
 			font-family: 'Open Sans', sans-serif;
@@ -330,23 +484,24 @@
 			font-weight: 700;
 			text-align: center;
 			padding: 16px 14px 18px;
-			color: #616467;
-			box-shadow: inset 0 0 0 2px #616467;
-			background-color: transparent;
+			color: var(--text-muted);
+			box-shadow: inset 0 0 0 2px var(--text-muted);
+			background-color: transparent; 
 			height: 48px;
 		}
 
 		button:hover {
 			color: #fff;
-			background-color: #616467;
+			background-color: var(--button-hover);
 		}
 
-		#buttonsContainer {
+		.buttonsContainer {
 			display: flex;
 			justify-content: center;
 		}
 
-		#postacTable {
+		#postacTable,
+		#skokTable {
 			width: 100%;
 		}
 
@@ -359,9 +514,13 @@
 		.spacerTd {
 			width: 1%;
 		}
-		table, tr, td {
-			border-collapse: collapse; 
+
+		table,
+		tr,
+		td {
+			border-collapse: collapse;
 		}
+
 		tr:nth-child(even) {
 			background: rgb(226, 226, 226)
 		}
@@ -371,11 +530,11 @@
 <body>
 
 	<div id="container">
-		<div id="buttonsContainer">
-			<button type="button" onclick="generate()">Generuj</button>
+		<div class="buttonsContainer">
+			<button type="button" onclick="generateCharacter()">Postać</button>
 		</div>
 		<hr>
-		<!-- [START] Podstawowe info -->
+		<!-- [START] POSTAĆ -->
 		<div id="postac">
 			<table id="postacTable">
 				<tr>
@@ -386,7 +545,7 @@
 				<tr>
 					<td class="header">Cel: &Tab;</td>
 					<td class="spacerTd"></td>
-					<td id="cel"></td>
+					<td id="celPostaci"></td>
 				</tr>
 				<tr>
 					<td class="header">Metoda działania: &Tab;</td>
@@ -415,10 +574,53 @@
 				</tr>
 			</table>
 		</div>
-		<!-- [KONIEC] Podstawowe info -->
+		<!-- [KONIEC] POSTAĆ -->
 		<hr>
-		<!-- [START] Dodatkowe detale -->
-		<!-- [KONIEC] Dodatkowe detale -->
+		<div class="buttonsContainer">
+			<button type="button" onclick="generateAction()">Skok</button>
+		</div>
+		<hr>
+		<!-- [START] SKOK -->
+		<div id="skok">
+			<table id="skokTable">
+				<tr>
+					<td class="header">Klient: &Tab;</td>
+					<td class="spacerTd"></td>
+					<td id="klient"></td>
+				</tr>
+				<tr>
+					<td class="header">Cel: &Tab;</td>
+					<td class="spacerTd"></td>
+					<td id="celSkoku"></td>
+				</tr>
+				<tr>
+					<td class="header">Robota: &Tab;</td>
+					<td class="spacerTd"></td>
+					<td id="robota"></td>
+				</tr>
+				<tr>
+					<td class="header">Zwrot akcji/komplikacja: &Tab;</td>
+					<td class="spacerTd"></td>
+					<td id="zwrotAkcji"></td>
+				</tr>
+				<tr>
+					<td class="header">Powiązany z osobą: &Tab;</td>
+					<td class="spacerTd"></td>
+					<td id="powiazanaOsoba"></td>
+				</tr>
+				<tr>
+					<td class="header">Powiązany z frakcją:</td>
+					<td class="spacerTd"></td>
+					<td id="powiazanaFrakcja"></td>
+				</tr>
+				<tr>
+					<td class="header">Dzielnica:</td>
+					<td class="spacerTd"></td>
+					<td id="dzielnica"></td>
+				</tr>
+			</table>
+		</div>
+		<!-- [KONIEC] SKOK -->
 	</div>
 </body>
 
