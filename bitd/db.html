@@ -1,0 +1,56 @@
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- jQuery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<!-- Dark mode simple CSS -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
+	<!-- Custom CSS -->
+	<style>
+		body {
+			font-family: 'Open Sans', sans-serif;
+			padding: 1em;
+		}
+		#newDB {
+			margin: 1em;
+		}
+	</style>
+
+</head>
+
+<body>
+	<!-- Kolumna z mapą -->
+	<center>
+	<div class="row">
+		<div class="col-md-8 mx-auto">
+			<div id="dbImg"><img src="./devbarg_imgs/DevilsBargain-01.png" style="opacity: 0"></div>
+			<button id="newDB">New Devil's Bargain</button>
+		</div>
+	</center>
+	<script>
+		function randBetween(min, max) {
+			number = Math.floor(Math.random() * (max - min + 1) + min)
+			return number.toString().padStart(2, '0')
+		}
+
+		$(document).ready(function () {
+			//Klikanie guzika newDB
+			$('#newDB').click(function () {
+				imgPath = 'DevilsBargain-' + randBetween(1,50) + '.png'
+				$('#dbImg').fadeOut(300, function() {
+					$('#dbImg').html('<img src="./devbarg_imgs/' + imgPath + '">').fadeIn(300)
+				})
+				
+			})
+
+		});
+
+	</script>
+</body>
+
+</html>
