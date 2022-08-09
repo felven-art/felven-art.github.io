@@ -16,8 +16,18 @@
 			font-family: 'Open Sans', sans-serif;
 			padding: 1em;
 		}
+
 		#newDB {
 			margin: 1em;
+		}
+
+		#dbImg {
+			width: 420px;
+			height: 560px;
+			margin: auto;
+		}
+		#btnContainer {
+			text-align: center;
 		}
 	</style>
 
@@ -25,13 +35,10 @@
 
 <body>
 	<!-- Kolumna z mapą -->
-	<center>
-	<div class="row">
-		<div class="col-md-8 mx-auto">
-			<div id="dbImg"><img src="./devbarg_imgs/DevilsBargain-01.png" style="opacity: 0"></div>
-			<button id="newDB">New Devil's Bargain</button>
-		</div>
-	</center>
+	<div class="container">
+			<div id="dbImg"></div>
+			<div id="btnContainer"><button id="newDB">New Devil's Bargain</button></div>
+	</div>
 	<script>
 		function randBetween(min, max) {
 			number = Math.floor(Math.random() * (max - min + 1) + min)
@@ -41,11 +48,11 @@
 		$(document).ready(function () {
 			//Klikanie guzika newDB
 			$('#newDB').click(function () {
-				imgPath = 'DevilsBargain-' + randBetween(1,50) + '.png'
-				$('#dbImg').fadeOut(300, function() {
+				imgPath = 'DevilsBargain-' + randBetween(1, 50) + '.png'
+				$('#dbImg').fadeOut(300, function () {
 					$('#dbImg').html('<img src="./devbarg_imgs/' + imgPath + '">').fadeIn(300)
 				})
-				
+
 			})
 
 		});
