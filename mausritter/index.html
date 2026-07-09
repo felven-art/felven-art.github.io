@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mausritter Live Sheets</title>
+
+<!-- PeerJS gives us peer-to-peer live sync with no backend of our own.
+     It loads from a CDN, so live sync needs internet + http(s)/localhost.
+     Everything else (sheets, storage) works fully offline. -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<!-- UI translations. Plain script so it works from file:// too. -->
+<script src="strings.js"></script>
+
+<style>
+/* ============================================================================
+   Mausritter paper theme: black ink on off-white, dashed borders, serif type.
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#16150f; --muted:#5c574a; --paper:#f4f1e8; --card:#fbf9f2;
+  --line:#16150f; --soft:#b7b0a0; --accent:#7a1f1f; --shade:#eae5d7;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  /* Item-category colours: muted, parchment-friendly tones that stay in the
+     same ink/sepia family as the rest of the theme (no bright/saturated hues). */
+  --cat-weapon:#7a1f1f; --cat-ranged:#8a5a23; --cat-armour:#3d5a73;
+  --cat-utility:#4b6b3a; --cat-spell:#5c3d73; --cat-condition:#736b23; --cat-custom:#4a4640;
+}
+body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.45}
+h1,h2,h3{letter-spacing:.03em}
+button{font-family:var(--serif)}
+
+/* --- top bar / status / tabs --- */
+.livebar{display:none;align-items:center;justify-content:center;gap:8px;padding:5px;
+  background:#2e5d2e;color:#eef7e6;font-size:.82rem}
+.livebar.on{display:flex}
+.livebar.off{background:var(--accent);color:#fff}
+.livebar.wait{display:flex;background:#736b23;color:#fdf6dd}
+.livebar .d{width:8px;height:8px;border-radius:50%;background:#bff0a0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 18px;border-bottom:2px solid var(--line);background:var(--card);flex-wrap:wrap}
+.top h1{font-size:1.3rem;text-transform:uppercase}
+.top .sub{font-size:.75rem;color:var(--muted);font-style:italic}
+.langsel{width:auto;font-size:.8rem;padding:4px 8px;border:1.5px solid var(--line);background:var(--paper);border-radius:4px;cursor:pointer}
+.tabs{display:flex;gap:6px;padding:8px 18px;background:var(--card);border-bottom:2px solid var(--line)}
+.tab{padding:6px 14px;border:1.5px solid var(--line);background:var(--paper);border-radius:5px;cursor:pointer}
+.tab.active{background:var(--ink);color:var(--paper)}
+.panel{display:none;max-width:1120px;margin:16px auto;padding:0 18px}
+.panel.active{display:block}
+
+/* --- generic bits --- */
+.card{border:2px solid var(--line);border-radius:6px;background:var(--card);padding:14px 16px;margin-bottom:14px}
+.card.dashed{border-style:dashed}
+.card h2{font-size:1.05rem;margin-bottom:8px}
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap}
+.spacer{flex:1}
+.btn{font-size:.9rem;border:1.5px solid var(--line);background:var(--paper);border-radius:4px;padding:6px 12px;cursor:pointer}
+.btn:hover{background:var(--shade)}
+.btn-p{background:var(--ink);color:var(--paper)} .btn-p:hover{background:#000}
+.btn-d{border-color:var(--accent);color:var(--accent)} .btn-d:hover{background:var(--accent);color:#fff}
+.btn-sm{font-size:.8rem;padding:4px 9px}
+.badge{font-size:.68rem;text-transform:uppercase;border:1px solid var(--line);border-radius:3px;padding:1px 6px;background:var(--paper)}
+.muted{color:var(--muted)}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.fld>span{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+input,textarea,select{font-family:var(--serif);font-size:.95rem;color:var(--ink);background:#fff;
+  border:1px solid var(--soft);border-radius:3px;padding:5px 7px;width:100%}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--ink);border-color:var(--ink)}
+textarea{min-height:56px;resize:vertical}
+input.num{width:64px;text-align:center}
+
+/* --- character list --- */
+.listhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.charcard{border:1.5px solid var(--line);border-radius:6px;background:var(--card);padding:12px;cursor:pointer;position:relative}
+.charcard:hover{border-color:var(--accent)}
+.charcard .nm{font-weight:700;font-size:1.05rem}
+.charcard .bg{font-size:.8rem;color:var(--muted);font-style:italic}
+.charcard .st{font-size:.78rem;color:var(--muted);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap}
+.charcard .del{position:absolute;top:6px;right:8px;border:none;background:none;color:var(--muted);cursor:pointer;font-size:1rem}
+.charcard .del:hover{color:var(--accent)}
+.empty{padding:24px;text-align:center;color:var(--muted);font-style:italic}
+
+/* --- editor --- */
+.edhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.edtitle input{font-size:1.3rem;font-weight:700;border:none;border-bottom:2px solid var(--line);background:transparent;border-radius:0}
+.edlayout{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+@media(min-width:920px){.edlayout{grid-template-columns:1fr 1.15fr}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:0 10px}
+.sectitle{font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+  border-bottom:1px dashed var(--soft);padding-bottom:3px;margin:14px 0 8px}
+.stats{display:inline-grid;grid-template-columns:60px 80px 80px;gap:6px 10px;align-items:center;text-align:center}
+.stats .hd{font-size:.7rem;text-transform:uppercase;color:var(--muted);text-align:center}
+.stats .nm{font-size:1rem;text-transform:uppercase;font-weight:700}
+.stats .num{font-size:1rem}
+/* HP sits in the same grid but separated by a dashed divider matching the theme. */
+.stats .hp-row{grid-column:1 / -1;border-top:1.5px dashed var(--soft);padding-top:8px;margin-top:4px}
+
+/* --- inventory grid (free-form placement) --- */
+.inv-grid{position:relative;margin:6px 0}
+.inv-cell{position:absolute;border:1px dashed var(--soft);background:var(--shade)}
+.inv-cell.over{background:rgba(46,125,50,.25);border-color:#2e7d32;border-style:solid}
+.inv-cell.bad{background:rgba(122,31,31,.2);border-color:var(--accent);border-style:solid}
+.inv-divider{position:absolute;border:2px dashed var(--line);opacity:.5;pointer-events:none;
+  box-sizing:border-box;border-radius:4px}
+.inv-zone{font-size:.6rem;text-transform:uppercase;color:var(--muted);padding:3px 4px;display:inline-block;pointer-events:none}
+.inv-footnote{position:absolute;font-size:.62rem;font-style:italic;color:var(--muted);
+  text-align:center;padding:2px 4px;line-height:1.25;pointer-events:none}
+.inv-item{position:absolute;background:var(--card);border:1.5px solid var(--line);border-radius:4px;padding:5px 7px;
+  cursor:grab;overflow:hidden;box-shadow:1px 1px 0 rgba(0,0,0,.22);display:flex;flex-direction:column}
+.inv-item.dragging{opacity:.4}
+.inv-item .iname{font-size:.88rem;font-weight:700;line-height:1.15}
+.inv-item .idmg{font-size:.78rem;color:var(--accent);font-weight:700}
+.inv-item .inotes{font-size:.8rem;color:var(--muted);line-height:1.3;overflow:hidden;flex:1;min-height:0;font-style:italic;
+  -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
+.inv-item .iclear{font-size:.78rem;color:var(--accent);line-height:1.3;padding-top:3px;border-top:1px dotted var(--soft)}
+/* Category colouring: a consistent, thicker left border per item type so the
+   kind of item is obvious at a glance. Border STYLE also varies for a couple
+   of types (dashed/dotted) as a second cue that doesn't rely on colour alone. */
+.inv-item.t-weapon{border-left:5px solid var(--cat-weapon)}
+.inv-item.t-ranged{border-left:5px double var(--cat-ranged)}
+.inv-item.t-armour{border-left:5px solid var(--cat-armour)}
+.inv-item.t-utility{border-left:5px solid var(--cat-utility)}
+.inv-item.t-spell{border-left:5px solid var(--cat-spell); border-style:dashed}
+.inv-item.t-condition{background:#e7e2d4;border-style:dotted;border-left:5px solid var(--cat-condition)}
+.inv-item.t-custom{border-left:5px dashed var(--cat-custom)}
+.pips{margin-top:auto;display:flex;gap:5px;padding-top:5px;flex-wrap:wrap}
+.pip{width:17px;height:17px;border:1.5px solid var(--line);border-radius:50%;background:var(--paper);cursor:pointer}
+.pip.on{background:var(--ink)}
+.ictl{position:absolute;top:3px;right:3px;display:none;gap:3px}
+.inv-item:hover .ictl{display:flex}
+.ibtn{width:22px;height:22px;font-size:.8rem;line-height:1;border:1px solid var(--line);background:var(--paper);border-radius:3px;cursor:pointer;padding:0}
+.ibtn:hover{background:var(--ink);color:var(--paper)}
+
+/* --- palette --- */
+.palette{margin-top:8px}
+.ptabs{display:flex;gap:4px;margin-bottom:6px}
+.ptab{flex:1;font-size:.78rem;padding:4px;border:1px solid var(--line);background:var(--paper);border-radius:4px;cursor:pointer}
+.ptab.active{background:var(--ink);color:var(--paper)}
+.pcat{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  border-bottom:1px dashed var(--soft);padding-bottom:2px;margin:10px 0 6px;width:100%}
+.pcat:first-child{margin-top:0}
+.plist{display:flex;flex-wrap:wrap;gap:6px;max-height:240px;overflow:auto}
+.chip{display:flex;align-items:center;gap:5px;border:1.5px solid var(--line);background:var(--paper);border-radius:4px;
+  padding:4px 7px;cursor:grab;font-size:.8rem}
+.chip .csz{font-size:.66rem;color:var(--muted)}
+/* Same category colours as the inventory tiles, so palette chips already hint
+   at what kind of item you're about to drag onto the sheet. */
+.chip.t-weapon{border-left:4px solid var(--cat-weapon)}
+.chip.t-ranged{border-left:4px double var(--cat-ranged)}
+.chip.t-armour{border-left:4px solid var(--cat-armour)}
+.chip.t-utility{border-left:4px solid var(--cat-utility)}
+.chip.t-spell{border-left:4px dashed var(--cat-spell)}
+.chip.t-condition{background:#e7e2d4;border-left:4px dotted var(--cat-condition)}
+.chip.t-custom{border-left:4px dashed var(--cat-custom)}
+.customform{border:1px dashed var(--line);border-radius:5px;padding:10px;margin-top:8px;background:var(--paper)}
+
+/* --- hirelings --- */
+.hire{border:1px dashed var(--line);border-radius:5px;padding:10px;margin-top:10px;background:var(--paper)}
+.hirehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+
+/* --- grit row: sits flush under the main inventory like a 3rd row --- */
+.grit-divider{display:flex;align-items:center;gap:10px;margin:10px 0 6px;color:var(--muted)}
+.grit-divider::before,.grit-divider::after{content:'';flex:1;border-top:1.5px dashed var(--soft)}
+.grit-divider span{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-style:italic}
+.grit-grid{display:flex;gap:0}
+.grit-cell{width:132px;height:132px;border:1px dashed var(--soft);background:var(--shade);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;box-sizing:border-box}
+.grit-cell + .grit-cell{border-left:none}
+.grit-cell .gc-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px}
+.grit-cell .gc-num{width:64px;text-align:center;font-size:1rem;border:1.5px solid var(--line);background:var(--paper)}
+.grit-slot{width:132px;height:132px;border:1px dashed var(--soft);background:var(--shade);
+  position:relative;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--muted)}
+.grit-slot + .grit-cell,.grit-cell + .grit-slot{border-left:none}
+.grit-slot.over{background:rgba(46,125,50,.25);border-color:#2e7d32;border-style:solid}
+.grit-slot.locked{opacity:.35;background:var(--paper);border-color:var(--soft)}
+.grit-slot.locked .inv-item{border-color:var(--accent);opacity:.7}
+.grit-slot .inv-item{position:absolute;inset:3px;width:auto;height:auto;left:3px;top:3px;right:3px;bottom:3px}
+
+/* --- live tab --- */
+.peer{display:flex;gap:8px;align-items:center;padding:5px 8px;background:var(--paper);border:1px solid var(--soft);border-radius:4px;margin-bottom:4px;font-size:.85rem}
+.peer .role{margin-left:auto;color:var(--muted);font-size:.75rem}
+.code{font-size:2rem;font-family:monospace;letter-spacing:4px;text-align:center;color:var(--accent);
+  border:2px dashed var(--accent);border-radius:6px;padding:12px;margin-bottom:10px}
+.err{display:none;color:var(--accent);font-size:.85rem;margin-top:6px}
+.err.on{display:block}
+
+/* --- toast --- */
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:var(--paper);
+  padding:8px 16px;border-radius:4px;font-size:.88rem;opacity:0;transition:.3s;z-index:50}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* --- modal (item editor) --- */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-box{background:var(--card);border:2px solid var(--line);border-radius:6px;padding:16px;max-width:360px;width:92%;max-height:90vh;overflow:auto}
+.modal-box h3{margin-bottom:10px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+@media(max-width:640px){.chargrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Live status bar (only visible while connected; text set by JS) -->
+<div class="livebar" id="livebar">
+  <span class="d"></span><span id="liveText"></span>
+  <button class="btn btn-sm" id="btnQuickLeave" data-i18n="live.leave" style="margin-left:8px">Leave</button>
+</div>
+
+<header class="top">
+  <div>
+    <h1 data-i18n="app.title">Mausritter Live Sheets</h1>
+    <div class="sub" data-i18n="app.sub">Shared character sheets.</div>
+  </div>
+  <select id="langSel" class="langsel" aria-label="Language">
+    <option value="en">EN</option>
+    <option value="pl">PL</option>
+  </select>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="chars" data-i18n="nav.chars">Characters</button>
+  <button class="tab" data-tab="live" data-i18n="nav.live">Live Session</button>
+  <button class="tab" data-tab="help" data-i18n="nav.help">Help</button>
+</nav>
+
+<!-- ========================= CHARACTERS ========================= -->
+<section class="panel active" id="panel-chars">
+  <div id="listView">
+    <div class="listhead">
+      <h2 data-i18n="list.title">Characters</h2>
+      <div class="rowbtns">
+        <button class="btn btn-p btn-sm" id="btnNew" data-i18n="btn.new">+ New character</button>
+        <button class="btn btn-sm" id="btnGenerate" data-i18n="btn.random">Random</button>
+        <button class="btn btn-sm" id="btnExport" data-i18n="btn.export">Export JSON</button>
+        <button class="btn btn-sm" id="btnImport" data-i18n="btn.import">Import JSON</button>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+      </div>
+    </div>
+    <div class="chargrid" id="charGrid"></div>
+  </div>
+  <div id="editorView" style="display:none"></div>
+</section>
+
+<!-- ========================= LIVE ========================= -->
+<section class="panel" id="panel-live">
+  <div class="card">
+    <h2 data-i18n="live.title">Live Session</h2>
+    <p class="muted" style="font-size:.88rem;margin-bottom:10px" data-i18n="live.blurb">Share your sheets.</p>
+    <div class="fld"><span data-i18n="live.yourName">Your display name</span>
+      <input id="playerName" data-i18n-ph="live.yourNamePh" maxlength="30"></div>
+
+    <div class="rowbtns" id="liveIdle">
+      <button class="btn btn-p" id="btnHost" data-i18n="live.host">Host a session</button>
+    </div>
+
+    <div id="hostArea" style="display:none">
+      <div class="code" id="roomCode">-----</div>
+      <div class="rowbtns">
+        <button class="btn btn-sm" id="btnCopyInvite" data-i18n="live.copyInvite">Copy invite link</button>
+        <button class="btn btn-sm btn-d" id="btnEnd" data-i18n="live.end">End session</button>
+      </div>
+      <h3 style="margin-top:12px;font-size:.9rem" data-i18n="live.atTable">At the table</h3>
+      <div id="peerList"></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <div class="fld"><span data-i18n="live.joinWith">Join with an invite link</span>
+        <input id="joinLink" data-i18n-ph="live.joinLinkPh"></div>
+      <button class="btn btn-p btn-sm" id="btnJoin" data-i18n="live.join">Join</button>
+      <div class="err" id="joinErr"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= HELP ========================= -->
+<section class="panel" id="panel-help">
+  <div class="card">
+    <h2 data-i18n="help.title">How it works</h2>
+    <ul style="padding-left:1.2rem;line-height:1.7;font-size:.9rem">
+      <li data-i18n-html="help.1"></li>
+      <li data-i18n-html="help.2"></li>
+      <li data-i18n-html="help.3"></li>
+      <li data-i18n-html="help.4"></li>
+      <li data-i18n-html="help.5"></li>
+      <li data-i18n-html="help.6"></li>
+    </ul>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================================
+   1. DATA — the default item & condition library (plain, easy to edit).
+      nameKey/notesKey point at strings.js so built-in items translate; a
+      placed item keeps referencing these keys until it is EDITED (the item
+      editor always saves literal text, which detaches it from the key — see
+      openItemEditor). Custom items (below) use literal name/notes from the start.
+      size:1|2 · usage:dots · damage:text
+   ========================================================================== */
+const ITEM_LIBRARY = [
+  // Broń
+  {id:'improvised',  nameKey:'item.improvised.name',  type:'weapon',  size:1, usage:3, damage:'d6', notesKey:'item.improvised.notes'},
+  {id:'light',       nameKey:'item.light.name',       type:'weapon',  size:1, usage:3, damage:'d6', notesKey:'item.light.notes'},
+  {id:'medium',      nameKey:'item.medium.name',      type:'weapon',  size:2, usage:3, damage:'d6/d8', orient:'v', notesKey:'item.medium.notes'},
+  {id:'heavy',       nameKey:'item.heavy.name',       type:'weapon',  size:2, usage:3, damage:'d10', orient:'v'},
+  {id:'lightRanged', nameKey:'item.lightRanged.name', type:'ranged',  size:1, usage:3, damage:'d6'},
+  {id:'heavyRanged', nameKey:'item.heavyRanged.name', type:'ranged',  size:2, usage:3, damage:'d8', orient:'v'},
+  // Amunicja
+  {id:'slingBullets', nameKey:'item.slingBullets.name', type:'utility', size:1},
+  {id:'arrows',      nameKey:'item.arrows.name',      type:'utility', size:1},
+  // Zbroja
+  {id:'lightArmour', nameKey:'item.lightArmour.name', type:'armour',  size:2, orient:'h', notesKey:'item.lightArmour.notes'},
+  {id:'heavyArmour', nameKey:'item.heavyArmour.name', type:'armour',  size:2, orient:'v', notesKey:'item.heavyArmour.notes'},
+  // Niezbędne wyposażenie
+  {id:'torch',       nameKey:'item.torch.name',       type:'utility', size:1, usage:3, notesKey:'item.torch.notes'},
+  {id:'lantern',     nameKey:'item.lantern.name',     type:'utility', size:1, usage:3, notesKey:'item.lantern.notes'},
+  {id:'eLantern',    nameKey:'item.eLantern.name',    type:'utility', size:1, usage:6, notesKey:'item.eLantern.notes'},
+  {id:'rations',     nameKey:'item.rations.name',     type:'utility', size:1, usage:3},
+  {id:'coinPurse',   nameKey:'item.coinPurse.name',   type:'utility', size:1, notesKey:'item.coinPurse.notes'},
+  // Zaklęcia
+  {id:'fireball',    nameKey:'item.fireball.name',    type:'spell',   size:1, usage:3, notesKey:'item.fireball.notes'},
+];
+const CONDITIONS = [
+  {id:'exhausted',  nameKey:'cond.exhausted.name',  type:'condition', size:1, notesKey:'cond.exhausted.notes',  clearKey:'cond.exhausted.clear'},
+  {id:'frightened', nameKey:'cond.frightened.name', type:'condition', size:1, notesKey:'cond.frightened.notes', clearKey:'cond.frightened.clear'},
+  {id:'hungry',     nameKey:'cond.hungry.name',     type:'condition', size:1, notesKey:'cond.hungry.notes',     clearKey:'cond.hungry.clear'},
+  {id:'wounded',    nameKey:'cond.wounded.name',    type:'condition', size:1, notesKey:'cond.wounded.notes',    clearKey:'cond.wounded.clear'},
+  {id:'insane',     nameKey:'cond.insane.name',     type:'condition', size:1, notesKey:'cond.insane.notes',     clearKey:'cond.insane.clear'},
+];
+// Zone labels are translation KEYS (translated fresh on each render).
+const MAIN_GRID = {cols:5, rows:2, cell:132, wornCols:2,
+  zones:['zone.mainPaw','zone.body','zone.pack','zone.pack','zone.pack',
+         'zone.offPaw','zone.body','zone.pack','zone.pack','zone.pack'],
+  footnotes:[{cols:1,key:'foot.ready'},{cols:1,key:'foot.quick'},{cols:3,key:'foot.pack'}]};
+const HIRE_GRID = {cols:2, rows:2, cell:112, zones:null};
+// Bank: extra long-term/temporary storage, deliberately 3x the main equipment's
+// 10 slots (5x2). Same column count AND cell size as MAIN_GRID so it lines up visually.
+const BANK_GRID = {cols:5, rows:6, cell:132, zones:null};
+// Grit: a single 1x1 cell, same cell size as MAIN_GRID so tiles match.
+const GRIT_GRID = {cols:1, rows:1, cell:132, zones:null};
+const STORAGE_KEY = 'mausritter_sheets';
+
+/* ============================================================================
+   2. STATE + PERSISTENCE — one plain object, saved to localStorage as JSON.
+   ========================================================================== */
+function defaultState(){ return { playerName:'', characters:{}, customItems:{} }; }
+let state = load();
+let currentCharId = null;   // which character is open in the editor
+let dragData = null;        // the item currently being dragged (or null)
+let LANG = localStorage.getItem('mausritter_lang') || 'en';
+
+function load(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY);
+       return raw ? Object.assign(defaultState(), JSON.parse(raw)) : defaultState(); }
+  catch(e){ return defaultState(); }
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('save failed', e); }
+}
+/** Save + push the change to connected peers. Call after every edit. */
+function commit(){ save(); broadcastState(); }
+
+/* ============================================================================
+   3. SMALL HELPERS (incl. i18n)
+   ========================================================================== */
+const $ = id => document.getElementById(id);
+/** Escape user text before putting it inside innerHTML (prevents HTML injection). */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2000); }
+function download(name, text, mime){ const b=new Blob([text],{type:mime});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click();
+  URL.revokeObjectURL(a.href); }
+
+/** Translate a key. Falls back to English, then to the key. {placeholders} filled from vars. */
+function t(key, vars){
+  const dict = (window.STRINGS && (window.STRINGS[LANG] || window.STRINGS.en)) || {};
+  const en = (window.STRINGS && window.STRINGS.en) || {};
+  let s = (key in dict) ? dict[key] : (key in en ? en[key] : key);
+  if(vars) s = s.replace(/\{(\w+)\}/g, (m,k)=> k in vars ? vars[k] : m);
+  return s;
+}
+/** The display name/notes/clear for an item definition: built-in items resolve
+    their nameKey/notesKey/clearKey through the current language; custom (or edited)
+    items carry literal text instead and are shown as-is. */
+function resolveLabel(def){
+  return {
+    name: def.nameKey ? t(def.nameKey) : (def.name||''),
+    notes: def.notesKey ? t(def.notesKey) : (def.notes||''),
+    clear: def.clearKey ? t(def.clearKey) : (def.clear||''),
+  };
+}
+/** Apply translations to the static HTML (tabs, buttons, help, placeholders). */
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+}
+/** Switch language: remember it, re-apply static text, re-render dynamic parts. */
+function setLang(l){
+  LANG = l; localStorage.setItem('mausritter_lang', l);
+  document.documentElement.lang = l;
+  applyStaticI18n(); render();
+}
+
+/* ============================================================================
+   4. CHARACTER MODEL
+   ========================================================================== */
+function blankStats(){ return {str:{max:0,cur:0},dex:{max:0,cur:0},wil:{max:0,cur:0},hp:{max:0,cur:0}}; }
+function blankCharacter(name){
+  return { id:uid('c'), name:name||'', background:'', birthsign:'', coat:'', look:'', description:'',
+    level:1, xp:0, grit:0, pips:0, stats:blankStats(), inv:{}, bank:{}, gritSlots:{}, hirelings:[], updatedAt:Date.now() };
+}
+function blankHireling(){ return {id:uid('h'), look:'', disposition:'', stats:blankStats(), inv:{}}; }
+
+const FIRST=['Bramble','Pip','Hazel','Thistle','Clover','Basil','Wren','Moss','Fern','Sage','Rue','Yarrow'];
+const LAST=['Whiskertail','Underroot','Mossback','Thornberry','Acorncap','Nutshell','Quickpaw','Longtail'];
+const BG=['Kitchen Forager','Herbalist','Ratcatcher','Tunneler','Brewer','Scribe','Messenger','Fisher'];
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const d6 = () => Math.floor(Math.random()*6)+1;
+function generateCharacter(){
+  const c = blankCharacter(rnd(FIRST)+' '+rnd(LAST));
+  c.background = rnd(BG);
+  for(const s of ['str','dex','wil']){ const v=d6()+d6()+d6(); c.stats[s]={max:v,cur:v}; }
+  const hp=d6(); c.stats.hp={max:hp,cur:hp};
+  c.pips = d6()+d6();
+  return c;
+}
+
+/* ============================================================================
+   5. INVENTORY GEOMETRY — pure functions.
+      An inventory is an object: uid -> {def, x, y, w, h, orient, pipsUsed}.
+   ========================================================================== */
+function footprint(def, orient){
+  if((def.size||1) >= 2) return orient==='v' ? {w:1,h:2} : {w:2,h:1};
+  return {w:1,h:1};
+}
+function fits(inv, cols, rows, cand){
+  if(cand.x<0 || cand.y<0 || cand.x+cand.w>cols || cand.y+cand.h>rows) return false;
+  for(const id in inv){
+    if(id===cand.uid) continue;
+    const p = inv[id];
+    if(cand.x < p.x+p.w && p.x < cand.x+cand.w && cand.y < p.y+p.h && p.y < cand.y+cand.h) return false;
+  }
+  return true;
+}
+function firstFree(inv, cols, rows, w, h){
+  for(let y=0;y<=rows-h;y++) for(let x=0;x<=cols-w;x++)
+    if(fits(inv, cols, rows, {uid:null,x,y,w,h})) return {x,y};
+  return null;
+}
+
+/* ============================================================================
+   6. RENDER — rebuild the DOM from state.
+   ========================================================================== */
+function render(){
+  renderCharacterList();
+  if(currentCharId && state.characters[currentCharId]) renderEditor();
+  else showList();
+}
+function showList(){ $('listView').style.display='block'; $('editorView').style.display='none'; }
+function showEditor(){ $('listView').style.display='none'; $('editorView').style.display='block'; }
+
+function renderCharacterList(){
+  const grid = $('charGrid');
+  const chars = Object.values(state.characters).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  if(!chars.length){ grid.innerHTML = `<div class="empty">${esc(t('list.empty'))}</div>`; return; }
+  grid.innerHTML = chars.map(c => `
+    <div class="charcard" data-open="${c.id}">
+      <button class="del" data-del="${c.id}" title="${esc(t('card.delete'))}">✕</button>
+      <div class="nm">${esc(c.name || t('card.unnamed'))}</div>
+      <div class="bg">${esc(c.background || '')}</div>
+      <div class="st">
+        <span>${esc(t('st.str'))} ${c.stats.str.cur}</span><span>${esc(t('st.dex'))} ${c.stats.dex.cur}</span>
+        <span>${esc(t('st.wil'))} ${c.stats.wil.cur}</span><span>${esc(t('st.hp'))} ${c.stats.hp.cur}/${c.stats.hp.max}</span>
+      </div>
+    </div>`).join('');
+  grid.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', e=>{
+    if(e.target.closest('[data-del]')) return; openEditor(el.dataset.open); }));
+  grid.querySelectorAll('[data-del]').forEach(el => el.addEventListener('click', e=>{
+    e.stopPropagation();
+    const c = state.characters[el.dataset.del];
+    if(confirm(t('confirm.delChar',{name:(c&&c.name)||t('card.unnamed')}))){
+      delete state.characters[el.dataset.del]; commit(); render();
+    }
+  }));
+}
+
+function openEditor(id){ currentCharId=id; showEditor(); renderEditor(); }
+function closeEditor(){ currentCharId=null; showList(); }
+
+/* Text fields commit on `change` (not each keystroke), so re-rendering the
+   inventory never steals your caret. */
+function renderEditor(){
+  const c = state.characters[currentCharId];
+  if(!c){ closeEditor(); return; }
+  const numFld = (path,label) => `<label class="fld"><span>${esc(label)}</span>
+     <input class="num" type="number" data-field="${path}" value="${getPath(c,path)}"></label>`;
+  const txtFld = (path,label) => `<label class="fld"><span>${esc(label)}</span>
+     <input type="text" data-field="${path}" value="${esc(getPath(c,path))}"></label>`;
+  const statRow = s => `<div class="nm">${esc(t('st.'+s))}</div>
+     <input class="num" type="number" data-field="stats.${s}.max" value="${c.stats[s].max}">
+     <input class="num" type="number" data-field="stats.${s}.cur" value="${c.stats[s].cur}">`;
+
+  const view = $('editorView');
+  view.innerHTML = `
+    <div class="edhead">
+      <button class="btn btn-sm" id="btnBack">${esc(t('ed.back'))}</button>
+      <div class="edtitle"><input type="text" data-field="name" value="${esc(c.name)}" placeholder="${esc(t('ed.namePh'))}"></div>
+      <button class="btn btn-sm btn-d" id="btnDelChar">${esc(t('ed.delete'))}</button>
+    </div>
+    <div class="edlayout">
+      <div class="card">
+        <div class="sectitle">${esc(t('ed.secCharacter'))}</div>
+        <div class="grid2">${txtFld('background',t('f.background'))}${txtFld('birthsign',t('f.birthsign'))}
+          ${txtFld('coat',t('f.coat'))}${txtFld('look',t('f.look'))}</div>
+        <div class="grid2">${numFld('level',t('f.level'))}${numFld('xp',t('f.xp'))}</div>
+        <label class="fld"><span>${esc(t('f.notes'))}</span>
+          <textarea data-field="description">${esc(c.description)}</textarea></label>
+        <div class="sectitle">${esc(t('ed.secStats'))}</div>
+        <div style="text-align:center"><div class="stats">
+          <div></div><div class="hd">${esc(t('st.max'))}</div><div class="hd">${esc(t('st.now'))}</div>
+          ${['str','dex','wil'].map(statRow).join('')}
+          <div class="hp-row"></div>
+          ${['hp'].map(statRow).join('')}
+        </div></div>
+      </div>
+      <div class="card">
+        <div class="sectitle">${esc(t('ed.secInventory'))}</div>
+        <div id="invMain"></div>
+        <div id="gritArea"></div>
+        <div class="rowbtns" style="margin-top:8px;align-items:flex-end">
+          <button class="btn btn-sm" id="btnTogglePalette"></button>
+          <button class="btn btn-sm" id="btnToggleBank"></button>
+          <div class="spacer"></div>
+        </div>
+        <div class="palette" id="palette" style="display:none"></div>
+        <div id="bankWrap" style="display:none;margin-top:8px"><div id="bankGrid"></div></div>
+        <div class="sectitle">${esc(t('ed.secHirelings'))}</div>
+        <div id="hirelings"></div>
+      </div>
+    </div>`;
+
+  view.addEventListener('change', onFieldChange);
+  $('btnBack').addEventListener('click', closeEditor);
+  $('btnDelChar').addEventListener('click', ()=>{
+    if(confirm(t('confirm.delChar',{name:c.name||t('card.unnamed')}))){
+      delete state.characters[currentCharId]; commit(); render();
+    }
+  });
+
+  // Item/condition/custom palette: collapsed by default (rarely needed, and
+  // takes real space), remembered across re-renders while this sheet is open.
+  const paletteEl = $('palette'), toggleBtn = $('btnTogglePalette');
+  const syncToggleLabel = ()=>{ toggleBtn.textContent = (paletteOpen?'▾ ':'▸ ') + t('pal.header'); };
+  paletteEl.style.display = paletteOpen ? 'block' : 'none';
+  syncToggleLabel();
+  toggleBtn.addEventListener('click', ()=>{
+    paletteOpen = !paletteOpen;
+    paletteEl.style.display = paletteOpen ? 'block' : 'none';
+    syncToggleLabel();
+  });
+
+  // Bank: bigger, occasional-use storage — same collapsed-by-default treatment.
+  const bankWrapEl = $('bankWrap'), bankToggleBtn = $('btnToggleBank');
+  const syncBankLabel = ()=>{ bankToggleBtn.textContent = (bankOpen?'▾ ':'▸ ') + t('bank.header'); };
+  bankWrapEl.style.display = bankOpen ? 'block' : 'none';
+  syncBankLabel();
+  bankToggleBtn.addEventListener('click', ()=>{
+    bankOpen = !bankOpen;
+    bankWrapEl.style.display = bankOpen ? 'block' : 'none';
+    syncBankLabel();
+  });
+
+  renderInventoryArea();
+}
+
+/* Rebuild only the inventory + palette + hirelings + grit (used after item edits). */
+function renderInventoryArea(){
+  const c = state.characters[currentCharId];
+  if(!c.bank) c.bank = {}; // fallback for characters saved before the bank existed
+  if(!c.gritSlots) c.gritSlots = {}; // fallback for pre-grit characters
+  renderGrid($('invMain'), c.inv, MAIN_GRID, c);
+  renderGrid($('bankGrid'), c.bank, BANK_GRID, c);
+  renderGritSlots($('gritArea'), c);
+  renderPalette($('palette'));
+  const wrap = $('hirelings'); wrap.innerHTML='';
+  c.hirelings.forEach((h,i)=> wrap.appendChild(buildHireling(h,i)));
+  if(c.hirelings.length < 2){
+    const add = document.createElement('button');
+    add.className='btn btn-sm'; add.textContent=t('hire.add');
+    add.addEventListener('click', ()=>{ c.hirelings.push(blankHireling()); commit(); renderEditor(); });
+    wrap.appendChild(add);
+  }
+}
+
+/* Render the 3 fixed grit condition slots. Slots beyond the current grit value
+   are "locked" (styled dimmed, reject drops). An item stranded in a locked slot
+   is NOT auto-removed — it stays visible with a warning style so the player
+   knows they need to deal with it manually. */
+function renderGritSlots(container, c){
+  if(!c.gritSlots) c.gritSlots={};
+  const grit = Math.max(0, Math.min(3, c.grit||0));
+  container.innerHTML='';
+  const divider = document.createElement('div'); divider.className='grit-divider';
+  divider.innerHTML = `<span>${esc(t('grit.divider'))}</span>`;
+  container.appendChild(divider);
+  const grid = document.createElement('div'); grid.className='grit-grid';
+
+  // Tile 1: Grit header + value.
+  const head = document.createElement('div'); head.className='grit-cell';
+  head.innerHTML = `<div class="gc-label">${esc(t('f.gritSlots'))}</div>
+    <input class="num gc-num" type="number" min="0" max="3" value="${grit}" data-field="grit">`;
+  head.querySelector('input').addEventListener('change', e=>{
+    c.grit = Math.max(0, Math.min(3, Number(e.target.value)||0));
+    c.updatedAt=Date.now(); commit(); renderGritSlots(container, c);
+  });
+  grid.appendChild(head);
+
+  // Tiles 2–4: the three grit condition slots.
+  for(let i=0;i<3;i++){
+    const locked = i >= grit;
+    const slot = document.createElement('div');
+    slot.className='grit-slot'+(locked?' locked':'');
+    if(locked && !c.gritSlots['g'+i]) slot.textContent='—';
+
+    const itemId = 'g'+i;
+    if(c.gritSlots[itemId]){
+      const p = c.gritSlots[itemId];
+      const {name,notes,clear} = resolveLabel(p.def);
+      const tile = document.createElement('div');
+      tile.className='inv-item t-'+(p.def.type||'condition');
+      tile.draggable=true;
+      if(notes||clear) tile.title = [notes,clear].filter(Boolean).join(' / ');
+      tile.innerHTML=`<div class="iname">${esc(name)}</div>`;
+      if(notes){ const nt=document.createElement('div'); nt.className='inotes'; nt.textContent=notes; tile.appendChild(nt); }
+      if(clear){ const cl=document.createElement('div'); cl.className='iclear'; cl.textContent=clear; tile.appendChild(cl); }
+      const ctl=document.createElement('div'); ctl.className='ictl';
+      ctl.appendChild(iconBtn('✎',t('ic.edit'), ev=>{ ev.stopPropagation(); openItemEditor(c.gritSlots,itemId,GRIT_GRID); }));
+      ctl.appendChild(iconBtn('✕',t('ic.remove'), ev=>{ ev.stopPropagation();
+        if(confirm(t('confirm.removeItem',{name}))){ delete c.gritSlots[itemId]; c.updatedAt=Date.now(); commit(); renderGritSlots(container,c); }
+      }));
+      tile.appendChild(ctl);
+      tile.addEventListener('dragstart', ()=>{ dragData={fromInv:c.gritSlots, uid:itemId, def:p.def, orient:'h', w:1, h:1};
+        tile.classList.add('dragging'); });
+      tile.addEventListener('dragend', ()=>{ dragData=null; tile.classList.remove('dragging'); });
+      slot.textContent=''; slot.appendChild(tile);
+    }
+
+    slot.addEventListener('dragover', e=>{
+      if(!dragData || locked) return;
+      if(dragData.w>1 || dragData.h>1) return;
+      if(c.gritSlots[itemId] && dragData.uid!==itemId) return;
+      e.preventDefault(); slot.classList.add('over');
+    });
+    slot.addEventListener('dragleave', ()=> slot.classList.remove('over'));
+    slot.addEventListener('drop', e=>{
+      e.preventDefault(); slot.classList.remove('over');
+      if(!dragData || locked) return;
+      if(dragData.w>1 || dragData.h>1){ toast(t('toast.cantPlace')); return; }
+      if(c.gritSlots[itemId] && dragData.uid!==itemId){ toast(t('toast.cantPlace')); return; }
+      const placement = dragData.fromInv && dragData.fromInv[dragData.uid]
+        ? {...dragData.fromInv[dragData.uid], x:0, y:0, w:1, h:1}
+        : {def:dragData.def, x:0, y:0, w:1, h:1, orient:'h', pipsUsed:0};
+      if(dragData.fromInv){
+        delete dragData.fromInv[dragData.uid];
+      }
+      c.gritSlots[itemId] = placement;
+      c.updatedAt=Date.now(); commit(); renderInventoryArea();
+    });
+    grid.appendChild(slot);
+  }
+
+  // Tile 5: Pips header + value.
+  const pips = document.createElement('div'); pips.className='grit-cell';
+  pips.innerHTML = `<div class="gc-label">${esc(t('f.pips'))}</div>
+    <input class="num gc-num" type="number" min="0" max="250" value="${c.pips||0}" data-field="pips">`;
+  pips.querySelector('input').addEventListener('change', e=>{
+    c.pips = Math.max(0, Math.min(250, Number(e.target.value)||0));
+    c.updatedAt=Date.now(); commit();
+  });
+  grid.appendChild(pips);
+
+  container.appendChild(grid);
+}
+
+function onFieldChange(e){
+  const path = e.target.dataset.field; if(!path) return;
+  const c = state.characters[currentCharId]; if(!c) return;
+  const val = e.target.type==='number' ? (e.target.value===''?0:Number(e.target.value)) : e.target.value;
+  setPath(c, path, val);
+  c.updatedAt = Date.now();
+  commit();
+  if(path==='name') renderCharacterList();
+}
+function getPath(o,p){ return p.split('.').reduce((a,k)=>a&&a[k], o) ?? ''; }
+function setPath(o,p,v){ const ks=p.split('.'); const last=ks.pop();
+  ks.reduce((a,k)=>a[k], o)[last] = v; }
+
+/* ============================================================================
+   7. INVENTORY GRID RENDERING + drag & drop (native HTML5 DnD).
+   ========================================================================== */
+function renderGrid(container, inv, grid, owner){
+  container.innerHTML='';
+  container.className='inv-grid';
+  container.style.width = grid.cols*grid.cell+'px';
+  container.style.height = grid.rows*grid.cell+'px';
+
+  for(let i=0;i<grid.cols*grid.rows;i++){
+    const x=i%grid.cols, y=Math.floor(i/grid.cols);
+    const cell=document.createElement('div');
+    cell.className='inv-cell';
+    cell.style.cssText=`left:${x*grid.cell}px;top:${y*grid.cell}px;width:${grid.cell}px;height:${grid.cell}px`;
+    if(grid.zones){ const z=document.createElement('span'); z.className='inv-zone'; z.textContent=t(grid.zones[i]); cell.appendChild(z); }
+    cell.addEventListener('dragover', e=>{
+      if(!dragData) return; e.preventDefault();
+      const {w,h}=dragData;
+      const ok = fits(inv, grid.cols, grid.rows, {uid:dragData.fromInv===inv?dragData.uid:null, x, y, w, h});
+      cell.classList.toggle('over', ok); cell.classList.toggle('bad', !ok);
+    });
+    cell.addEventListener('dragleave', ()=> cell.classList.remove('over','bad'));
+    cell.addEventListener('drop', e=>{ e.preventDefault(); cell.classList.remove('over','bad'); dropOn(inv, grid, x, y); });
+    container.appendChild(cell);
+  }
+
+  for(const id in inv) container.appendChild(buildItem(id, inv[id], inv, grid));
+
+  if(grid.wornCols && grid.wornCols < grid.cols){
+    const div = document.createElement('div');
+    div.className='inv-divider';
+    const w = (grid.cols - grid.wornCols) * grid.cell;
+    div.style.cssText=`left:${grid.wornCols*grid.cell}px;top:0;width:${w}px;height:${grid.rows*grid.cell}px`;
+    container.appendChild(div);
+  }
+
+  if(grid.footnotes){
+    const footY = grid.rows*grid.cell + 6;
+    container.style.marginBottom = '28px';
+    let xOff = 0;
+    for(const f of grid.footnotes){
+      const fn = document.createElement('div');
+      fn.className='inv-footnote';
+      fn.style.cssText=`left:${xOff*grid.cell}px;top:${footY}px;width:${f.cols*grid.cell}px`;
+      fn.textContent = t(f.key);
+      container.appendChild(fn);
+      xOff += f.cols;
+    }
+  }
+}
+
+function buildItem(id, p, inv, grid){
+  const it=document.createElement('div');
+  it.className='inv-item t-'+(p.def.type||'custom');
+  it.style.cssText=`left:${p.x*grid.cell+3}px;top:${p.y*grid.cell+3}px;`+
+                   `width:${p.w*grid.cell-6}px;height:${p.h*grid.cell-6}px`;
+  it.draggable=true;
+  const { name, notes, clear } = resolveLabel(p.def);
+  if(notes||clear) it.title = [notes,clear].filter(Boolean).join(' / ');
+
+  const nameEl=document.createElement('div'); nameEl.className='iname'; nameEl.textContent=name; it.appendChild(nameEl);
+  if(p.def.damage){ const d=document.createElement('div'); d.className='idmg'; d.textContent=p.def.damage; it.appendChild(d); }
+  if(notes){ const nt=document.createElement('div'); nt.className='inotes'; nt.textContent=notes; it.appendChild(nt); }
+  if(clear){ const cl=document.createElement('div'); cl.className='iclear'; cl.textContent=clear; it.appendChild(cl); }
+
+  if(p.def.usage>0){
+    const pips=document.createElement('div'); pips.className='pips';
+    for(let i=0;i<p.def.usage;i++){
+      const dot=document.createElement('span'); dot.className='pip'+(i<(p.pipsUsed||0)?' on':'');
+      dot.addEventListener('click', ev=>{ ev.stopPropagation();
+        p.pipsUsed = (p.pipsUsed||0)===i+1 ? i : i+1; commit(); renderInventoryArea(); });
+      pips.appendChild(dot);
+    }
+    it.appendChild(pips);
+  }
+
+  const ctl=document.createElement('div'); ctl.className='ictl';
+  ctl.appendChild(iconBtn('✎',t('ic.edit'), ev=>{ ev.stopPropagation(); openItemEditor(inv,id,grid); }));
+  if((p.def.size||1)>=2){
+    ctl.appendChild(iconBtn('⟳',t('ic.rotate'), ev=>{ ev.stopPropagation(); rotate(inv,grid,id,p); }));
+  }
+  ctl.appendChild(iconBtn('✕',t('ic.remove'), ev=>{ ev.stopPropagation();
+    if(confirm(t('confirm.removeItem',{name:resolveLabel(p.def).name||t('card.unnamed')}))){ delete inv[id]; commit(); renderInventoryArea(); }
+  }));
+  it.appendChild(ctl);
+
+  it.addEventListener('dragstart', ()=>{ dragData={fromInv:inv, uid:id, def:p.def, orient:p.orient, w:p.w, h:p.h};
+    it.classList.add('dragging'); });
+  it.addEventListener('dragend', ()=>{ dragData=null; it.classList.remove('dragging'); });
+  return it;
+}
+
+function rotate(inv, grid, id, p){
+  const orient = p.orient==='v'?'h':'v';
+  const {w,h}=footprint(p.def, orient);
+  const x=Math.min(p.x, grid.cols-w), y=Math.min(p.y, grid.rows-h);
+  if(fits(inv, grid.cols, grid.rows, {uid:id, x, y, w, h})){
+    Object.assign(p, {orient, w, h, x, y}); commit(); renderInventoryArea();
+  } else toast(t('toast.cantRotate'));
+}
+
+/* Type <option> list, with the current type pre-selected and translated. */
+function typeOptions(sel){ return ['weapon','ranged','armour','utility','spell','condition','custom']
+  .map(ty=>`<option value="${ty}"${ty===sel?' selected':''}>${esc(t('type.'+ty))}</option>`).join(''); }
+
+/* Edit a PLACED item in a dialog (edits only this placement's copy). Saving
+   ALWAYS writes literal name/notes text, which detaches this placement from
+   any nameKey/notesKey it had — from then on it behaves like a custom item
+   and no longer changes with the language switcher. This keeps the rule
+   simple: translated until you touch it, literal once you edit it. */
+function openItemEditor(inv, id, grid){
+  const p = inv[id], d = p.def;
+  const { name: curName, notes: curNotes, clear: curClear } = resolveLabel(d);
+  const isCond = (d.type||'custom')==='condition';
+  const overlay = document.createElement('div'); overlay.className='modal';
+  const box = document.createElement('div'); box.className='modal-box';
+  box.innerHTML = `
+    <h3>${esc(t('ie.title'))}</h3>
+    <label class="fld"><span>${esc(t('ie.name'))}</span><input id="eName" value="${esc(curName)}"></label>
+    <div class="grid2">
+      <label class="fld"><span>${esc(t('ie.type'))}</span><select id="eType">${typeOptions(d.type||'custom')}</select></label>
+      <label class="fld"><span>${esc(t('ie.size'))}</span><select id="eSize">
+        <option value="1"${(d.size||1)<2?' selected':''}>${esc(t('ie.size1'))}</option>
+        <option value="2"${(d.size||1)>=2?' selected':''}>${esc(t('ie.size2'))}</option></select></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>${esc(t('ie.damage'))}</span><input id="eDmg" value="${esc(d.damage||'')}"></label>
+      <label class="fld"><span>${esc(t('ie.usage'))}</span><input id="eUsage" type="number" min="0" max="9" value="${d.usage||0}"></label>
+    </div>
+    <label class="fld"><span>${esc(t('ie.notes'))}</span><textarea id="eNotes">${esc(curNotes)}</textarea></label>
+    ${isCond ? `<label class="fld"><span>${esc(t('ie.clear'))}</span><textarea id="eClear">${esc(curClear)}</textarea></label>` : ''}
+    <div class="modal-actions">
+      <button class="btn btn-sm" id="eCancel">${esc(t('ie.cancel'))}</button>
+      <button class="btn btn-sm btn-p" id="eSave">${esc(t('ie.save'))}</button>
+    </div>`;
+  overlay.appendChild(box); document.body.appendChild(overlay);
+  const close = ()=> overlay.remove();
+  overlay.addEventListener('click', ev=>{ if(ev.target===overlay) close(); });
+  box.querySelector('#eCancel').addEventListener('click', close);
+  box.querySelector('#eSave').addEventListener('click', ()=>{
+    const name = box.querySelector('#eName').value.trim();
+    if(!name){ toast(t('toast.nameReq')); return; }
+    // Literal fields only — nameKey/notesKey/clearKey are intentionally dropped
+    // here, detaching this placement from the library translation (see comment above).
+    const newDef = { id:d.id, type:box.querySelector('#eType').value, name,
+      size:Number(box.querySelector('#eSize').value), damage:box.querySelector('#eDmg').value.trim(),
+      usage:Math.max(0,Number(box.querySelector('#eUsage').value)||0), notes:box.querySelector('#eNotes').value.trim() };
+    const clearEl = box.querySelector('#eClear');
+    if(clearEl) newDef.clear = clearEl.value.trim();
+    const {w,h}=footprint(newDef, p.orient);
+    const x=Math.min(p.x, grid.cols-w), y=Math.min(p.y, grid.rows-h);
+    if(!fits(inv, grid.cols, grid.rows, {uid:id, x, y, w, h})){ toast(t('toast.noFit')); return; }
+    p.def=newDef; p.w=w; p.h=h; p.x=x; p.y=y;
+    if((p.pipsUsed||0) > newDef.usage) p.pipsUsed = newDef.usage||0;
+    commit(); renderInventoryArea(); close();
+  });
+}
+
+function dropOn(targetInv, grid, x, y){
+  if(!dragData) return;
+  const {w,h}=dragData;
+  const movingSame = dragData.fromInv===targetInv;
+  if(!fits(targetInv, grid.cols, grid.rows, {uid:movingSame?dragData.uid:null, x, y, w, h})){ toast(t('toast.cantPlace')); return; }
+
+  if(dragData.fromInv){
+    const src=dragData.fromInv[dragData.uid];
+    const moved=Object.assign({}, src, {x,y,w,h,orient:dragData.orient});
+    if(!movingSame) delete dragData.fromInv[dragData.uid];
+    targetInv[dragData.uid]=moved;
+  } else {
+    targetInv[uid('i')] = {def:dragData.def, x, y, w, h, orient:dragData.orient, pipsUsed:0};
+  }
+  const c=state.characters[currentCharId]; if(c) c.updatedAt=Date.now();
+  commit(); renderInventoryArea();
+}
+
+function iconBtn(text,title,fn){ const b=document.createElement('button');
+  b.className='ibtn'; b.textContent=text; b.title=title; b.addEventListener('click',fn); return b; }
+
+/* ============================================================================
+   8. PALETTE — draggable item/condition/custom chips + a custom-item form.
+   ========================================================================== */
+let paletteTab='items';
+let paletteOpen=false; // collapsed by default: rarely used, shouldn't eat screen space
+let bankOpen=false;    // same idea for the (much bigger) bank storage grid
+function renderPalette(root){
+  root.innerHTML='';
+  const tabs=document.createElement('div'); tabs.className='ptabs';
+  ['items','conditions','custom'].forEach(tab=>{
+    const b=document.createElement('button'); b.className='ptab'+(tab===paletteTab?' active':''); b.textContent=t('pal.'+tab);
+    b.addEventListener('click', ()=>{ paletteTab=tab; renderPalette(root); });
+    tabs.appendChild(b);
+  });
+  root.appendChild(tabs);
+
+  const list=document.createElement('div'); list.className='plist';
+  const defs = paletteTab==='items' ? ITEM_LIBRARY
+            : paletteTab==='conditions' ? CONDITIONS
+            : Object.values(state.customItems);
+  if(!defs.length){ list.innerHTML=`<span class="muted" style="font-size:.8rem">${esc(t('pal.empty'))}</span>`; }
+  if(paletteTab==='items'){
+    // Group items by their `type` field, preserving library order.
+    let lastType=null;
+    defs.forEach(def=>{
+      if(def.type && def.type!==lastType){
+        lastType=def.type;
+        const h=document.createElement('div'); h.className='pcat';
+        h.textContent=t('type.'+def.type);
+        list.appendChild(h);
+      }
+      list.appendChild(buildChip(def));
+    });
+  } else {
+    defs.forEach(def=> list.appendChild(buildChip(def)));
+  }
+  root.appendChild(list);
+
+  if(paletteTab==='custom') root.appendChild(buildCustomForm(root));
+}
+
+function buildChip(def){
+  const chip=document.createElement('div'); chip.className='chip t-'+(def.type||'custom');
+  const { name, notes } = resolveLabel(def);
+  if(notes) chip.title = notes;
+  chip.innerHTML = `<span>${esc(name)}</span>`+
+    (def.damage?`<span class="csz">${esc(def.damage)}</span>`:'')+
+    `<span class="csz">${(def.size||1)>=2?'▭▭':'▭'}</span>`;
+  chip.draggable=true;
+  chip.addEventListener('dragstart', ()=>{ const o=def.orient||'h'; const {w,h}=footprint(def,o);
+    dragData={fromInv:null, uid:null, def, orient:o, w, h}; });
+  chip.addEventListener('dragend', ()=> dragData=null);
+  chip.addEventListener('click', ()=>{
+    const c=state.characters[currentCharId]; const o=def.orient||'h'; const {w,h}=footprint(def,o);
+    const spot=firstFree(c.inv, MAIN_GRID.cols, MAIN_GRID.rows, w, h);
+    if(!spot){ toast(t('toast.noRoom')); return; }
+    c.inv[uid('i')]={def, x:spot.x, y:spot.y, w, h, orient:o, pipsUsed:0};
+    c.updatedAt=Date.now(); commit(); renderInventoryArea();
+  });
+  return chip;
+}
+
+function buildCustomForm(paletteRoot){
+  const f=document.createElement('div'); f.className='customform';
+  f.innerHTML=`
+    <label class="fld"><span>${esc(t('ie.name'))}</span><input id="cName" placeholder="${esc(t('cf.namePh'))}"></label>
+    <div class="grid2">
+      <label class="fld"><span>${esc(t('ie.type'))}</span><select id="cType">${typeOptions('utility')}</select></label>
+      <label class="fld"><span>${esc(t('ie.size'))}</span><select id="cSize">
+        <option value="1">${esc(t('ie.size1'))}</option><option value="2">${esc(t('ie.size2'))}</option></select></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>${esc(t('ie.damage'))}</span><input id="cDmg" placeholder="d6"></label>
+      <label class="fld"><span>${esc(t('ie.usage'))}</span><input id="cUsage" type="number" min="0" max="9" value="0"></label>
+    </div>
+    <label class="fld"><span>${esc(t('ie.notes'))}</span><input id="cNotes"></label>
+    <button class="btn btn-sm btn-p" id="cAdd">${esc(t('cf.add'))}</button>`;
+  f.querySelector('#cAdd').addEventListener('click', ()=>{
+    const name=f.querySelector('#cName').value.trim(); if(!name){ toast(t('toast.nameReq')); return; }
+    const id=uid('def');
+    state.customItems[id]={ id, name, type:f.querySelector('#cType').value,
+      size:Number(f.querySelector('#cSize').value), damage:f.querySelector('#cDmg').value.trim(),
+      usage:Math.max(0,Number(f.querySelector('#cUsage').value)||0), notes:f.querySelector('#cNotes').value.trim() };
+    commit(); renderPalette(paletteRoot); toast(t('toast.added',{name}));
+  });
+  return f;
+}
+
+/* ============================================================================
+   9. HIRELINGS
+   ========================================================================== */
+function buildHireling(h, i){
+  const box=document.createElement('div'); box.className='hire';
+  box.innerHTML=`
+    <div class="hirehead"><strong>${esc(t('hire.title',{n:i+1}))}</strong>
+      <button class="btn btn-sm btn-d" data-rm>${esc(t('hire.remove'))}</button></div>
+    <div class="grid2">
+      <label class="fld"><span>${esc(t('hire.look'))}</span><input type="text" data-hf="look" value="${esc(h.look)}"></label>
+      <label class="fld"><span>${esc(t('hire.disposition'))}</span><input type="text" data-hf="disposition" value="${esc(h.disposition)}"></label>
+    </div>
+    <div class="stats">
+      <div></div><div class="hd">${esc(t('st.max'))}</div><div class="hd">${esc(t('st.now'))}</div>
+      ${['str','dex','wil','hp'].map(s=>`<div class="nm">${esc(t('st.'+s))}</div>
+        <input class="num" type="number" data-hf="stats.${s}.max" value="${h.stats[s].max}">
+        <input class="num" type="number" data-hf="stats.${s}.cur" value="${h.stats[s].cur}">`).join('')}
+    </div>
+    <div class="sectitle">${esc(t('ed.secInventory'))}</div><div data-hgrid></div>`;
+  box.addEventListener('change', e=>{ const p=e.target.dataset.hf; if(!p) return;
+    const v=e.target.type==='number'?(e.target.value===''?0:Number(e.target.value)):e.target.value;
+    setPath(h,p,v); state.characters[currentCharId].updatedAt=Date.now(); commit(); });
+  box.querySelector('[data-rm]').addEventListener('click', ()=>{
+    state.characters[currentCharId].hirelings.splice(i,1); commit(); renderEditor(); });
+  renderGrid(box.querySelector('[data-hgrid]'), h.inv, HIRE_GRID, h);
+  return box;
+}
+
+/* ============================================================================
+   10. EXPORT / IMPORT — all characters + custom items as one JSON file.
+   ========================================================================== */
+function exportAll(){
+  const data={ app:'mausritter-live-sheets', exportedAt:new Date().toISOString(),
+    characters:state.characters, customItems:state.customItems };
+  download('mausritter-sheets.json', JSON.stringify(data,null,2), 'application/json');
+}
+function importFile(file){
+  const r=new FileReader();
+  r.onload=()=>{ try{
+      const data=JSON.parse(r.result);
+      const chars=data.characters||{};
+      Object.values(chars).forEach(c=>{ state.characters[c.id]=c; });
+      if(data.customItems) Object.assign(state.customItems, data.customItems);
+      commit(); render(); toast(t('toast.imported',{n:Object.keys(chars).length}));
+    }catch(e){ toast(t('toast.importErr')); }
+  };
+  r.readAsText(file);
+}
+
+/* ============================================================================
+   11. LIVE SESSION (PeerJS) — one host, others join. Full-state broadcast on
+       every change (simple last-write-wins). Host relays to all clients.
+
+       Auto-reconnect: a dropped connection (WiFi blip, laptop sleep, etc.)
+       does NOT immediately end the session. Both host and client retry every
+       few seconds for a few minutes before finally giving up. This does not
+       change the star topology (everyone still goes through the host) — it
+       just stops a brief network hiccup from forcing everyone to rejoin by
+       hand. A long-enough outage can still make the room unreachable (the
+       public signaling broker may drop the host's registration), in which
+       case the host has to start a fresh session — see README/Help.
+   ========================================================================== */
+let peer=null, connections=[], isHost=false, roomCode='', roomSecret='', peers=[];
+
+function peerId(code,secret){ return 'mausritter-'+code+'-'+secret; }
+function randomCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s='';
+  for(let i=0;i<5;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+function randomSecret(){ return Math.random().toString(36).slice(2,10); }
+function myName(){ return (state.playerName||'').trim() || 'Mouse'; }
+
+function setLiveBar(text, mode){ const b=$('livebar');
+  if(text===null){ b.className='livebar'; return; }
+  b.className='livebar '+(mode||'off'); $('liveText').textContent=text; }
+
+/* --- reconnect helper, shared by host and client --------------------------
+   Keeps retrying `attemptFn` every few seconds, showing a "reconnecting…"
+   status, until either something calls clearReconnectState() (because the
+   connection came back) or RECONNECT_MAX_MS has passed (then it gives up
+   and ends the session for real). */
+let reconnectTimer=null, reconnectAttempts=0, reconnectStartedAt=0;
+const RECONNECT_STEP_MS = 4000;        // how often to retry
+const RECONNECT_MAX_MS  = 3*60*1000;   // give up after ~3 minutes of trying
+
+function clearReconnectState(){
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  reconnectAttempts=0; reconnectStartedAt=0;
+}
+function beginReconnect(attemptFn){
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  if(reconnectStartedAt===0) reconnectStartedAt=Date.now();
+  if(Date.now()-reconnectStartedAt > RECONNECT_MAX_MS){
+    clearReconnectState(); endLive(t('live.giveUp')); return;
+  }
+  reconnectAttempts++;
+  setLiveBar(t('live.reconnecting',{n:reconnectAttempts}), 'wait');
+  attemptFn();
+  reconnectTimer=setTimeout(()=> beginReconnect(attemptFn), RECONNECT_STEP_MS);
+}
+
+function broadcastState(){
+  const msg=JSON.stringify({type:'state', characters:state.characters, customItems:state.customItems});
+  connections.forEach(c=>{ if(c.open) c.send(msg); });
+}
+function send(conn,obj){ if(conn.open) conn.send(JSON.stringify(obj)); }
+
+function onData(data, from){
+  let msg; try{ msg=JSON.parse(data); }catch(e){ return; }
+  if(msg.type==='join' && isHost){
+    peers=peers.filter(p=>p.id!==from.peer); // dedupe: a reconnecting peer keeps the same id
+    peers.push({id:from.peer, name:msg.name}); renderPeers();
+    send(from, {type:'state', characters:state.characters, customItems:state.customItems});
+    broadcastPeers();
+  }
+  else if(msg.type==='state'){
+    state.characters=msg.characters||{}; state.customItems=msg.customItems||{};
+    save(); render();
+    if(isHost) connections.forEach(c=>{ if(c!==from && c.open) c.send(data); });
+  }
+  else if(msg.type==='peers'){ $('peerList').innerHTML=renderPeerHtml(msg.peers); }
+  else if(msg.type==='bye'){ endLive(t('live.hostEnded')); }
+}
+function broadcastPeers(){ const names=[myName()].concat(peers.map(p=>p.name));
+  connections.forEach(c=> send(c,{type:'peers', peers:names})); renderPeers(); }
+function renderPeers(){ $('peerList').innerHTML=renderPeerHtml([myName()].concat(peers.map(p=>p.name))); }
+function renderPeerHtml(names){ return names.map((n,i)=>`<div class="peer">🐭 <span>${esc(n)}</span>
+  <span class="role">${i===0?esc(t('role.host')):esc(t('role.player'))}</span></div>`).join(''); }
+
+function hostSession(){
+  roomCode=randomCode(); roomSecret=randomSecret();
+  clearReconnectState();
+  let openedOnce=false; // tells a later 'open' (after a reconnect) apart from the first one
+  peer=new Peer(peerId(roomCode,roomSecret));
+  peer.on('open', ()=>{
+    clearReconnectState();
+    if(!openedOnce){
+      openedOnce=true; isHost=true; peers=[];
+      $('liveIdle').style.display='none'; $('hostArea').style.display='block';
+      $('roomCode').textContent=roomCode; renderPeers();
+      setLiveBar(t('live.hosting',{code:roomCode}), 'on'); toast(t('toast.sessionStarted'));
+    } else {
+      // Signaling reconnected; existing player connections were unaffected.
+      setLiveBar(t('live.hosting',{code:roomCode}), 'on'); toast(t('live.reconnected'));
+    }
+  });
+  peer.on('connection', conn=>{ connections.push(conn);
+    conn.on('data', d=>onData(d,conn));
+    conn.on('close', ()=>{ connections=connections.filter(c=>c!==conn);
+      peers=peers.filter(p=>p.id!==conn.peer); broadcastPeers(); }); });
+  peer.on('error', e=> toast(t('toast.liveErr',{type:e.type})));
+  // Lost the signaling connection (not the same as a player's data connection
+  // dropping) — try to get the SAME room code/secret back online.
+  peer.on('disconnected', ()=> beginReconnect(()=>{
+    if(peer && !peer.destroyed) peer.reconnect();
+  }));
+}
+
+function connectToHost(){
+  const conn=peer.connect(peerId(roomCode, roomSecret), {reliable:true});
+  connections=[conn];
+  conn.on('open', ()=>{
+    const wasReconnecting = reconnectAttempts>0;
+    clearReconnectState();
+    isHost=false; send(conn,{type:'join', name:myName()});
+    setLiveBar(wasReconnecting ? t('live.reconnected') : t('live.joined',{code:roomCode}), 'on');
+    toast(wasReconnecting ? t('live.reconnected') : t('toast.connected'));
+  });
+  conn.on('data', d=>onData(d,conn));
+  // Connection to the host dropped — keep retrying instead of ending the
+  // session immediately; `endLive` (via beginReconnect's timeout) is the
+  // real "give up" path.
+  conn.on('close', ()=> beginReconnect(()=> connectToHost()));
+}
+
+function joinSession(link){
+  let code, secret;
+  try{ const u=new URL(link, location.href); code=u.searchParams.get('room'); secret=u.searchParams.get('secret'); }
+  catch(e){}
+  if(!code || !secret){ showJoinErr(t('live.badLink')); return; }
+  showJoinErr('');
+  clearReconnectState();
+  roomCode=code; roomSecret=secret; // remembered so reconnect attempts can reuse them
+  peer=new Peer();
+  peer.on('open', ()=> connectToHost());
+  peer.on('error', ()=> showJoinErr(t('live.cantConnect')));
+  peer.on('disconnected', ()=> beginReconnect(()=>{
+    if(!peer || peer.destroyed) return;
+    if(peer.disconnected) peer.reconnect(); else connectToHost();
+  }));
+}
+
+function endLive(reason){
+  clearReconnectState();
+  if(isHost) connections.forEach(c=> send(c,{type:'bye'}));
+  connections.forEach(c=>{ try{c.close();}catch(e){} });
+  connections=[]; peers=[]; if(peer){ try{peer.destroy();}catch(e){} peer=null; }
+  isHost=false;
+  $('liveIdle').style.display='flex'; $('hostArea').style.display='none';
+  setLiveBar(reason||null, 'off');
+  if(reason){ toast(reason); setTimeout(()=>setLiveBar(null), 3000); }
+}
+function inviteLink(){ return location.origin+location.pathname+'?room='+roomCode+'&secret='+roomSecret; }
+function showJoinErr(m){ const e=$('joinErr'); e.textContent=m; e.classList.toggle('on', !!m); }
+
+/* ============================================================================
+   12. WIRE UP THE PAGE
+   ========================================================================== */
+document.querySelectorAll('.tab').forEach(t2=> t2.addEventListener('click', ()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t2.classList.add('active'); $('panel-'+t2.dataset.tab).classList.add('active');
+}));
+
+// language switcher
+$('langSel').value = LANG;
+$('langSel').addEventListener('change', ()=> setLang($('langSel').value));
+
+// characters
+$('btnNew').addEventListener('click', ()=>{ const c=blankCharacter(''); state.characters[c.id]=c; commit(); openEditor(c.id); });
+$('btnGenerate').addEventListener('click', ()=>{ const c=generateCharacter(); state.characters[c.id]=c; commit(); render(); toast(t('toast.created',{name:c.name})); });
+$('btnExport').addEventListener('click', exportAll);
+$('btnImport').addEventListener('click', ()=> $('importFile').click());
+$('importFile').addEventListener('change', e=>{ if(e.target.files[0]) importFile(e.target.files[0]); e.target.value=''; });
+
+// live
+$('playerName').value = state.playerName||'';
+$('playerName').addEventListener('change', ()=>{ state.playerName=$('playerName').value.trim(); save(); });
+$('btnHost').addEventListener('click', hostSession);
+$('btnEnd').addEventListener('click', ()=> endLive(t('live.ended')));
+$('btnQuickLeave').addEventListener('click', ()=> endLive(t('live.left')));
+$('btnJoin').addEventListener('click', ()=> joinSession($('joinLink').value.trim()));
+$('btnCopyInvite').addEventListener('click', ()=>{
+  navigator.clipboard.writeText(inviteLink()).then(()=>toast(t('toast.copied'))).catch(()=>prompt('', inviteLink()));
+});
+
+// auto-join if opened from an invite link
+(function(){ const p=new URLSearchParams(location.search);
+  if(p.get('room') && p.get('secret')){
+    document.querySelector('.tab[data-tab="live"]').click();
+    $('joinLink').value = location.href;
+    setTimeout(()=> joinSession(location.href), 400);
+  }
+})();
+
+document.documentElement.lang = LANG;
+applyStaticI18n();
+render();
+})();
+</script>
+</body>
+</html>
