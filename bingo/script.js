@@ -1,7 +1,9 @@
 "use strict";
 
-const ALPHABET = Array.from("AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ");
-const VOWELS = new Set(Array.from("AĄEĘIOÓUY"));
+//const ALPHABET = Array.from("AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ");
+//const VOWELS = new Set(Array.from("AĄEĘIOÓUY"));
+const ALPHABET = Array.from("ABCDEFGHIJKLMNOPRSTUWYZ");
+const VOWELS = new Set(Array.from("AEIOUY"));
 const MAX_DUPLICATE_ATTEMPTS = 100;
 
 const form = document.getElementById("settings");
