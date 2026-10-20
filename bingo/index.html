@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Literkowe bingo: plansze do druku</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header class="intro screen-only">
+        <p class="eyebrow">Zabawa w poznawanie liter</p>
+        <h1>Literkowe bingo</h1>
+        <p>Wylosuj plansze, wydrukuj i graj. Każda plansza zajmuje jedną stronę A4.</p>
+      </header>
+
+      <form id="settings" class="settings screen-only" novalidate>
+        <fieldset>
+          <legend>Twoje plansze</legend>
+          <div class="fields">
+            <div class="field">
+              <label for="rows">Wiersze</label>
+              <input id="rows" name="rows" type="number" min="2" max="32" step="1" value="5" required
+                aria-describedby="dimensions-help rows-error">
+              <span id="rows-error" class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="columns">Kolumny</label>
+              <input id="columns" name="columns" type="number" min="2" max="32" step="1" value="5" required
+                aria-describedby="dimensions-help columns-error">
+              <span id="columns-error" class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="count">Liczba plansz</label>
+              <input id="count" name="count" type="number" min="1" max="100" step="1" value="10" required
+                aria-describedby="count-error">
+              <span id="count-error" class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="letter-case">Wielkość liter</label>
+              <select id="letter-case" name="letter-case">
+                <option value="upper">Wielkie (A, Ą, B)</option>
+                <option value="lower">Małe (a, ą, b)</option>
+              </select>
+            </div>
+          </div>
+          <p id="dimensions-help" class="help">
+            Od 2 do 32 wierszy i kolumn. Litery nie powtarzają się w tym samym wierszu ani kolumnie.
+            Większe plansze mają mniejsze litery.
+          </p>
+        </fieldset>
+
+        <details class="appearance-options">
+          <summary>Wygląd plansz i kolory</summary>
+          <div class="appearance-content">
+            <fieldset>
+              <legend>Czcionka i układ</legend>
+              <div class="field mode-field">
+                <label for="board-font">Czcionka na planszy</label>
+                <select id="board-font" name="board-font">
+                  <optgroup label="Klasyczne i czytelne">
+                    <option value="arial">Arial (klasyczna)</option>
+                    <option value="georgia">Georgia (szeryfowa)</option>
+                    <option value="trebuchet">Trebuchet MS (czytelna)</option>
+                  </optgroup>
+                  <optgroup label="Wesołe i zaokrąglone">
+                    <option value="nunito">Nunito (jak interfejs)</option>
+                    <option value="comic">Comic Sans MS (odręczna)</option>
+                  </optgroup>
+                </select>
+              </div>
+              <label class="layout-toggle" for="square-cells">
+                <input id="square-cells" name="square-cells" type="checkbox" checked aria-describedby="layout-help">
+                <span>Tylko kwadratowe pola</span>
+              </label>
+              <p id="layout-help" class="help">
+                Wyłącz, aby plansza wypełniała całą dostępną stronę A4. Pola mogą wtedy być prostokątne.
+              </p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Kolory liter</legend>
+              <div class="field mode-field">
+                <label for="color-mode">Sposób kolorowania</label>
+                <select id="color-mode" name="color-mode">
+                  <option value="black">Wszystkie czarne</option>
+                  <option value="groups">Samogłoski i spółgłoski</option>
+                  <option value="random">Losowe kolory</option>
+                </select>
+              </div>
+              <div id="group-colors" class="color-options" hidden>
+                <label class="color-field" for="vowel-color">
+                  <input id="vowel-color" type="color" value="#c62828">
+                  <span>Samogłoski</span>
+                </label>
+                <label class="color-field" for="consonant-color">
+                  <input id="consonant-color" type="color" value="#1565c0">
+                  <span>Spółgłoski</span>
+                </label>
+                <p class="help">Samogłoski: A, Ą, E, Ę, I, O, Ó, U, Y.</p>
+              </div>
+              <div id="random-colors" class="color-options" hidden>
+                <div class="palette-toolbar">
+                  <button id="generate-palette" type="button" class="secondary">Losuj paletę</button>
+                  <p class="help">Pasujące do siebie kolory, czytelne na białym tle. Zablokuj te, które chcesz zachować.</p>
+                </div>
+                <div class="palette">
+                  <div class="palette-card">
+                    <label for="palette-1">Kolor 1</label>
+                    <input id="palette-1" class="palette-color" type="color" value="#c62828">
+                    <span class="palette-hex">#C62828</span>
+                    <label class="palette-lock-label">
+                      <input class="palette-lock" type="checkbox" aria-label="Zablokuj kolor 1"> Zablokuj
+                    </label>
+                  </div>
+                  <div class="palette-card">
+                    <label for="palette-2">Kolor 2</label>
+                    <input id="palette-2" class="palette-color" type="color" value="#1565c0">
+                    <span class="palette-hex">#1565C0</span>
+                    <label class="palette-lock-label">
+                      <input class="palette-lock" type="checkbox" aria-label="Zablokuj kolor 2"> Zablokuj
+                    </label>
+                  </div>
+                  <div class="palette-card">
+                    <label for="palette-3">Kolor 3</label>
+                    <input id="palette-3" class="palette-color" type="color" value="#2e7d32">
+                    <span class="palette-hex">#2E7D32</span>
+                    <label class="palette-lock-label">
+                      <input class="palette-lock" type="checkbox" aria-label="Zablokuj kolor 3"> Zablokuj
+                    </label>
+                  </div>
+                  <div class="palette-card">
+                    <label for="palette-4">Kolor 4</label>
+                    <input id="palette-4" class="palette-color" type="color" value="#7b1fa2">
+                    <span class="palette-hex">#7B1FA2</span>
+                    <label class="palette-lock-label">
+                      <input class="palette-lock" type="checkbox" aria-label="Zablokuj kolor 4"> Zablokuj
+                    </label>
+                  </div>
+                  <div class="palette-card">
+                    <label for="palette-5">Kolor 5</label>
+                    <input id="palette-5" class="palette-color" type="color" value="#ad4900">
+                    <span class="palette-hex">#AD4900</span>
+                    <label class="palette-lock-label">
+                      <input class="palette-lock" type="checkbox" aria-label="Zablokuj kolor 5"> Zablokuj
+                    </label>
+                  </div>
+                  <div class="palette-card">
+                    <label for="palette-6">Kolor 6</label>
+                    <input id="palette-6" class="palette-color" type="color" value="#00695c">
+                    <span class="palette-hex">#00695C</span>
+                    <label class="palette-lock-label">
+                      <input class="palette-lock" type="checkbox" aria-label="Zablokuj kolor 6"> Zablokuj
+                    </label>
+                  </div>
+                </div>
+                <p id="palette-status" class="help" role="status"></p>
+                <p class="help">Każda litera otrzyma losowy kolor z palety. Kolory mogą się powtarzać.</p>
+              </div>
+              <p id="color-help" class="help" hidden>
+                Kolorujemy tylko litery. Pola pozostają białe. Bardzo jasne kolory mogą być słabo widoczne na wydruku.
+              </p>
+            </fieldset>
+          </div>
+        </details>
+
+        <div class="actions">
+          <button type="submit" id="generate">Generuj plansze</button>
+          <button type="button" id="print" class="secondary" disabled>Drukuj / zapisz PDF</button>
+        </div>
+        <p class="print-help">
+          Druk: A4, pionowo, skala 100%. Wyłącz nagłówki i stopki przeglądarki.
+          Aby zapisać plik, wybierz „Zapisz jako PDF” w oknie drukowania.
+        </p>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <p id="generation-error" class="field-error" role="alert"></p>
+      </form>
+
+      <section class="preview" aria-labelledby="preview-heading">
+        <div class="preview-heading screen-only">
+          <h2 id="preview-heading">Podgląd wydruku</h2>
+          <span>A4 · jedna plansza na stronę</span>
+        </div>
+        <div id="sheets" class="sheets"></div>
+      </section>
+      <noscript>
+        <p class="screen-only">Włącz JavaScript w przeglądarce, aby generować plansze.</p>
+      </noscript>
+    </main>
+  </body>
+</html>
